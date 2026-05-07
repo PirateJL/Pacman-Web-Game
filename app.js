@@ -42,7 +42,7 @@ const Game = {
     },
     Audio: class {
         static playIntro(params = null) {
-            const audio = this.audios.intro
+            const audio = new Audio("./sounds/Intro.wav")
             if (!Utils.Functions.empty(params) && !Utils.Functions.empty(params.onEnded)) {audio.onended = params.onEnded}
             audio.play()
         }
@@ -518,17 +518,22 @@ const Game = {
             for (let i in Game.availableKeyboards) {
                 const keyboardType = Game.availableKeyboards[i];
 
-                Utils.Functions.AddEvent(Utils.Functions.load('keyboardSelect-'+i), 'click', function(_keyboardType, _PromptWindow) { 
+                Utils.Functions.AddEvent(Utils.Functions.load('keyboardSelect-'+i), 'click', function(_keyboardType, _PromptWindow) {
                     return function() {
-                        Game.Audio.playWaka({
-                            onEnded: function () {
-                                Game.Storage.localStorageSet('PacmanWebGameKeyboard', _keyboardType)
-                                Game.PAUSE = false
-                                _PromptWindow.ClosePrompt()
-                                // to save info in a config, in an other step
-                                window.location.reload()
-                            }
-                        })
+                        Game.Storage.localStorageSet('PacmanWebGameKeyboard', _keyboardType)
+                        Game.PAUSE = false
+                        _PromptWindow.ClosePrompt()
+
+                        // Reload on sound end, with a timeout fallback so a blocked/failed
+                        // audio play (autoplay policy, missing file) can't leave the page hung.
+                        let reloaded = false
+                        const reload = function () {
+                            if (reloaded) return
+                            reloaded = true
+                            window.location.reload()
+                        }
+                        Game.Audio.playWaka({ onEnded: reload })
+                        setTimeout(reload, 1500)
                     }
                 }(keyboardType, promptWindow))
             }
