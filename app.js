@@ -30,6 +30,7 @@ const Game = {
         this.gameCanvas.width = window.innerWidth
         this.gameCanvas.height = window.innerHeight
 
+        // Game.Audio.playIntro()
         this.initBoundaries()
         this.initPlayer()
         this.initGhosts()
@@ -38,6 +39,48 @@ const Game = {
         this.animate()
 
         this.READY = true
+    },
+    Audio: class {
+        static playIntro(params = null) {
+            const audio = new Audio("./sounds/Intro.wav")
+            if (!Utils.Functions.empty(params) && !Utils.Functions.empty(params.onEnded)) {audio.onended = params.onEnded}
+            audio.play()
+        }
+        static playWaka(params = null) {
+            const audio = new Audio("./sounds/waka.mp3")
+            if (!Utils.Functions.empty(params) && !Utils.Functions.empty(params.onEnded)) {audio.onended = params.onEnded}
+            audio.play()
+        }
+        static playExtraPacman(params = null) {
+            const audio = new Audio("./sounds/pacman_extrapac.mp3")
+            if (!Utils.Functions.empty(params) && !Utils.Functions.empty(params.onEnded)) {audio.onended = params.onEnded}
+            audio.play()
+        }
+        static playEatFruit(params = null) {
+            const audio = new Audio("./sounds/pacman_eatfruit.mp3")
+            if (!Utils.Functions.empty(params) && !Utils.Functions.empty(params.onEnded)) {audio.onended = params.onEnded}
+            audio.play()
+        }
+        static playPowerDot(params = null) {
+            const audio = new Audio("./sounds/power_dot.mp3")
+            if (!Utils.Functions.empty(params) && !Utils.Functions.empty(params.onEnded)) {audio.onended = params.onEnded}
+            audio.play()
+        }
+        static playWinGame(params = null) {
+            const audio = new Audio("./sounds/gameWin.mp3")
+            if (!Utils.Functions.empty(params) && !Utils.Functions.empty(params.onEnded)) {audio.onended = params.onEnded}
+            audio.play()
+        }
+        static playEndGame(params = null) {
+            const audio = new Audio("./sounds/gameOver.mp3")
+            if (!Utils.Functions.empty(params) && !Utils.Functions.empty(params.onEnded)) {audio.onended = params.onEnded}
+            audio.play()
+        }
+        static playEatGhost(params = null) {
+            const audio = new Audio("./sounds/eat_ghost.mp3")
+            if (!Utils.Functions.empty(params) && !Utils.Functions.empty(params.onEnded)) {audio.onended = params.onEnded}
+            audio.play()
+        }
     },
     Boundary: class {
         static width =  40;
@@ -475,13 +518,22 @@ const Game = {
             for (let i in Game.availableKeyboards) {
                 const keyboardType = Game.availableKeyboards[i];
 
-                Utils.Functions.AddEvent(Utils.Functions.load('keyboardSelect-'+i), 'click', function(_keyboardType, _PromptWindow) { 
+                Utils.Functions.AddEvent(Utils.Functions.load('keyboardSelect-'+i), 'click', function(_keyboardType, _PromptWindow) {
                     return function() {
                         Game.Storage.localStorageSet('PacmanWebGameKeyboard', _keyboardType)
                         Game.PAUSE = false
                         _PromptWindow.ClosePrompt()
-                        // to save info in a config, in an other step
-                        window.location.reload()
+
+                        // Reload on sound end, with a timeout fallback so a blocked/failed
+                        // audio play (autoplay policy, missing file) can't leave the page hung.
+                        let reloaded = false
+                        const reload = function () {
+                            if (reloaded) return
+                            reloaded = true
+                            window.location.reload()
+                        }
+                        Game.Audio.playWaka({ onEnded: reload })
+                        setTimeout(reload, 1500)
                     }
                 }(keyboardType, promptWindow))
             }
@@ -586,6 +638,7 @@ const Game = {
                 Game.pellets.splice(i, 1)
                 Game.score += 10
                 Game.scoreElement.innerHTML = Game.score
+                Game.Audio.playWaka()
             }
         }
 
@@ -596,9 +649,11 @@ const Game = {
             if (Math.hypot(ghost.position.x - Game.player.position.x, ghost.position.y - Game.player.position.y) < ghost.radius + Game.player.radius) {
                 if (ghost.scared) {
                     Game.ghosts.splice(i, 1)
+                    Game.Audio.playEatGhost()
                 } else {
                     cancelAnimationFrame(Game.animationId)
                     console.log('you lose')
+                    Game.Audio.playEndGame()
                 }
             }
         }
@@ -607,6 +662,7 @@ const Game = {
         if (Game.pellets.length === 0) {
             cancelAnimationFrame(Game.animationId)
             console.log('You WIN')
+            Game.Audio.playWinGame()
         }
 
         //PowerUp collision here
@@ -616,6 +672,7 @@ const Game = {
 
             if (Math.hypot(powerUp.position.x - Game.player.position.x, powerUp.position.y - Game.player.position.y) < powerUp.radius + Game.player.radius) {
                 Game.powerUps.splice(i, 1)
+                Game.Audio.playPowerDot()
 
                 // Make ghost scared
                 Game.ghosts.forEach(ghost => {
@@ -754,7 +811,7 @@ const Game = {
 				else {
 					if (typeof options[i] == 'string') {options[i] = [options[i], 'const p = new Game.PromptWindow(); p.ClosePrompt();'];}
 					else if (!options[i][1]) {options[i] = [options[i][0], 'const p = new Game.PromptWindow(); p.ClosePrompt();', options[i][2]];}
-					else {options[i][1] = options[i][1];}
+					else {options[i][1] = 'Game.Audio.playWaka();' + options[i][1];}
 
 					options[i][1] = options[i][1].replace(/'/g, '&#39;').replace(/"/g, '&#34;');
 					opts += '<a id="promptOption' + i + '" class="option" ' + (options[i][2] ? 'style="' + options[i][2] + '" ' : '') + '' + 'onclick="' + options[i][1] + '">' + options[i][0] + '</a>';
@@ -816,7 +873,6 @@ const Game = {
 
 
 window.onload = (e) => {
-    const Test = 'test var'
     if (!Game.READY) {
         Game.init()
     }
