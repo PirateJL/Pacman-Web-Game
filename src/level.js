@@ -130,6 +130,15 @@ export const GRID_ROWS = Math.max(...LEVELS.map(level => level.map.length))
 export const GAME_WIDTH = GRID_COLUMNS * TILE_SIZE
 export const GAME_HEIGHT = GRID_ROWS * TILE_SIZE
 
+export function getLevelPixelSize(levelIndex) {
+    const level = LEVELS[levelIndex] || LEVELS[0]
+
+    return {
+        width: level.map[0].length * TILE_SIZE,
+        height: level.map.length * TILE_SIZE
+    }
+}
+
 const IMAGE_URLS = {
     "-": new URL("./assets/images/pipeHorizontal.png", import.meta.url).href,
     "|": new URL("./assets/images/pipeVertical.png", import.meta.url).href,

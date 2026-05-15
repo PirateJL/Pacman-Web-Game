@@ -11,7 +11,7 @@ import {
     Sprite,
     Velocity
 } from "./components.js"
-import { hasNextLevel, loadLevel, PLAYER_SPEED, TILE_SIZE } from "./level.js"
+import { GAME_HEIGHT, GAME_WIDTH, getLevelPixelSize, hasNextLevel, loadLevel, PLAYER_SPEED, TILE_SIZE } from "./level.js"
 import { AssetCache, AudioResource, CanvasResource, GameState, InputResource, PlaySoundEvent } from "./resources.js"
 
 export const SYSTEM_PHASES = [
@@ -154,7 +154,12 @@ function boundaryCollisionSystem(world) {
 
 function renderSystem(world) {
     const { canvas, context } = world.requireResource(CanvasResource)
+    const state = world.requireResource(GameState)
+    const offset = getRenderOffset(state.levelIndex)
+
     context.clearRect(0, 0, canvas.width, canvas.height)
+    context.save()
+    context.translate(offset.x, offset.y)
 
     for (const { c1: position, c2: sprite } of world.query(Position, Sprite, Boundary)) {
         context.drawImage(sprite.image, position.x, position.y)
@@ -175,6 +180,8 @@ function renderSystem(world) {
     for (const { e, c1: position, c2: collider, c3: ghost } of world.query(Position, CircleCollider, GhostAI)) {
         drawCircle(context, position, collider.radius, world.has(e, Scared) ? "blue" : ghost.color)
     }
+
+    context.restore()
 }
 
 function movementSystem(world) {
@@ -319,6 +326,15 @@ function drawPlayer(context, position, radius, player) {
 function sameDirections(left, right) {
     if (left.length !== right.length) return false
     return left.every((direction, index) => direction === right[index])
+}
+
+function getRenderOffset(levelIndex) {
+    const levelSize = getLevelPixelSize(levelIndex)
+
+    return {
+        x: Math.max(0, (GAME_WIDTH - levelSize.width) / 2),
+        y: Math.max(0, (GAME_HEIGHT - levelSize.height) / 2)
+    }
 }
 
 function endGame(world, message, soundName) {
