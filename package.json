@@ -1,0 +1,29 @@
+{
+  "name": "pacman-web-game",
+  "version": "1.0.0",
+  "description": "Creating a fun Pacman game on the web :)   Website link: https://jdevs10.github.io/Pacman-Web-Game",
+  "type": "module",
+  "main": "./app.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PirateJL/Pacman-Web-Game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PirateJL/Pacman-Web-Game/issues"
+  },
+  "homepage": "https://github.com/PirateJL/Pacman-Web-Game#readme",
+  "dependencies": {
+    "archetype-ecs-lib": "^1.0.0"
+  },
+  "devDependencies": {
+    "vite": "^8.0.13"
+  }
+}
