@@ -1,4 +1,5 @@
 import { Schedule, World } from "archetype-ecs-lib"
+import { DevTools, LevelSelectorTool } from "./devtools.js"
 import { Utils } from "./utils.js"
 import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE, loadLevel } from "./level.js"
 import {
@@ -183,6 +184,8 @@ class GameController {
         this.state = null
         this.input = null
         this.audio = null
+        this.assets = null
+        this.devTools = null
         this.availableKeyboards = ["AZERTY", "QWERTY"]
         this.currentKeyboardType = null
         this.Storage = Storage
@@ -224,12 +227,14 @@ class GameController {
 
         this.world = world
         this.schedule = schedule
+        this.assets = assets
         this.state = state
         this.input = input
         this.audio = audio
 
         this.initKeyControl()
         this.initMovementKeys()
+        this.initDevTools()
         this.resizeBoard()
         window.addEventListener("resize", this.resizeBoard)
         this.READY = true
@@ -257,6 +262,52 @@ class GameController {
         canvas.style.height = "100%"
     }
 
+    initDevTools() {
+        this.devTools = new DevTools({
+            game: this,
+            root: document.getElementById("devTools")
+        })
+
+        this.devTools
+            .register(new LevelSelectorTool())
+            .mount()
+        this.devTools.hide()
+        
+        const pressedKeys = new Set()
+        let chordWasDown = false
+
+        window.addEventListener("keydown", event => {
+            pressedKeys.add(event.key.toLowerCase())
+
+            const chordIsDown = pressedKeys.has("d") && pressedKeys.has("t")
+            if (!chordIsDown || chordWasDown) return
+
+            chordWasDown = true
+            this.devTools.toggle()
+        })
+
+        window.addEventListener("keyup", event => {
+            pressedKeys.delete(event.key.toLowerCase())
+            if (!pressedKeys.has("d") || !pressedKeys.has("t")) chordWasDown = false
+        })
+
+        console.info("Devtools ready: press D+T")
+    }
+
+    goToLevel(levelIndex) {
+        if (!this.world || !this.assets || !this.state) return
+
+        this.state.setLevelIndex(levelIndex)
+        this.state.ended = false
+        this.state.lastTimestamp = 0
+        loadLevel(this.world, this.assets, levelIndex)
+        this.state.updateHud()
+
+        if (!this.state.paused && this.state.animationId === null) {
+            this.animate()
+        }
+    }
+
     animate(timestamp = 0) {
         if (!this.state || this.state.paused || this.state.ended) return
 
@@ -264,6 +315,7 @@ class GameController {
         this.state.lastTimestamp = timestamp
         this.state.animationId = requestAnimationFrame(this.animate)
         this.schedule.run(this.world, dt, SYSTEM_PHASES)
+        this.devTools?.update()
     }
 
     initKeyControl() {

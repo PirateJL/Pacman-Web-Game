@@ -74,6 +74,61 @@ body {
     display: block;
 }
 
+.devtools {
+    z-index: 1000;
+    width: min(420px, calc(100vw - 32px));
+    border: 1px solid #354164;
+    background: #070a15;
+    color: #dbe4ff;
+    font-family: Arial, Helvetica, sans-serif;
+    box-shadow: 0 12px 34px rgba(0,0,0,0.6);
+}
+
+.devtools-header {
+    display: flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border-bottom: 1px solid #24304f;
+    background: #0c1226;
+}
+
+.devtools-title {
+    color: #9fb7ff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.devtools-body {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+}
+
+.devtool {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.devtool-label {
+    color: #9fb7ff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.devtool-select {
+    min-width: 180px;
+    height: 30px;
+    border: 1px solid #415ec6;
+    background: #111936;
+    color: #ffe84a;
+    font-family: "Courier New", monospace;
+    font-size: 14px;
+}
+
 @media (max-width: 760px) {
     .hud {
         grid-template-columns: repeat(2, minmax(0, 1fr));

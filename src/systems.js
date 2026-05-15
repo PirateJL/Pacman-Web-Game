@@ -345,6 +345,7 @@ function endGame(world, message, soundName) {
     if (soundName === "endGame") state.setLives(0)
     console.log(message)
     cancelAnimationFrame(state.animationId)
+    state.animationId = null
     world.emit(PlaySoundEvent, new PlaySoundEvent(soundName))
 }
 
