@@ -32,22 +32,22 @@ export const LEVEL_MAP = [
 ]
 
 const IMAGE_URLS = {
-    "-": new URL("../images/pipeHorizontal.png", import.meta.url).href,
-    "|": new URL("../images/pipeVertical.png", import.meta.url).href,
-    "1": new URL("../images/pipeCorner1.png", import.meta.url).href,
-    "2": new URL("../images/pipeCorner2.png", import.meta.url).href,
-    "3": new URL("../images/pipeCorner3.png", import.meta.url).href,
-    "4": new URL("../images/pipeCorner4.png", import.meta.url).href,
-    b: new URL("../images/block.png", import.meta.url).href,
-    "[": new URL("../images/capLeft.png", import.meta.url).href,
-    "]": new URL("../images/capRight.png", import.meta.url).href,
-    _: new URL("../images/capBottom.png", import.meta.url).href,
-    "^": new URL("../images/capTop.png", import.meta.url).href,
-    "+": new URL("../images/pipeCross.png", import.meta.url).href,
-    "5": new URL("../images/pipeConnectorTop.png", import.meta.url).href,
-    "6": new URL("../images/pipeConnectorRight.png", import.meta.url).href,
-    "7": new URL("../images/pipeConnectorBottom.png", import.meta.url).href,
-    "8": new URL("../images/pipeConnectorLeft.png", import.meta.url).href
+    "-": new URL("./assets/images/pipeHorizontal.png", import.meta.url).href,
+    "|": new URL("./assets/images/pipeVertical.png", import.meta.url).href,
+    "1": new URL("./assets/images/pipeCorner1.png", import.meta.url).href,
+    "2": new URL("./assets/images/pipeCorner2.png", import.meta.url).href,
+    "3": new URL("./assets/images/pipeCorner3.png", import.meta.url).href,
+    "4": new URL("./assets/images/pipeCorner4.png", import.meta.url).href,
+    b: new URL("./assets/images/block.png", import.meta.url).href,
+    "[": new URL("./assets/images/capLeft.png", import.meta.url).href,
+    "]": new URL("./assets/images/capRight.png", import.meta.url).href,
+    _: new URL("./assets/images/capBottom.png", import.meta.url).href,
+    "^": new URL("./assets/images/capTop.png", import.meta.url).href,
+    "+": new URL("./assets/images/pipeCross.png", import.meta.url).href,
+    "5": new URL("./assets/images/pipeConnectorTop.png", import.meta.url).href,
+    "6": new URL("./assets/images/pipeConnectorRight.png", import.meta.url).href,
+    "7": new URL("./assets/images/pipeConnectorBottom.png", import.meta.url).href,
+    "8": new URL("./assets/images/pipeConnectorLeft.png", import.meta.url).href
 }
 
 export function spawnLevel(world, assets) {

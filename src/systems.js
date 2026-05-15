@@ -17,32 +17,38 @@ import { AudioResource, CanvasResource, GameState, InputResource, PlaySoundEvent
 export const SYSTEM_PHASES = [
     "input",
     "pelletCollision",
+    "audioAfterPellet",
     "ghostCollision",
+    "audioAfterGhost",
     "winCondition",
+    "audioAfterWin",
     "powerUpCollision",
+    "audioAfterPowerUp",
     "scaredTimer",
     "boundaryCollision",
     "render",
     "movement",
     "ghostAi",
-    "playerRotation",
-    "audio"
+    "playerRotation"
 ]
 
 export function registerSystems(schedule, world, keyControl) {
     schedule.setOrder(SYSTEM_PHASES)
     schedule.add(world, "input", inputSystem(keyControl))
     schedule.add(world, "pelletCollision", pelletCollisionSystem)
+    schedule.add(world, "audioAfterPellet", audioSystem)
     schedule.add(world, "ghostCollision", ghostCollisionSystem)
+    schedule.add(world, "audioAfterGhost", audioSystem)
     schedule.add(world, "winCondition", winConditionSystem)
+    schedule.add(world, "audioAfterWin", audioSystem)
     schedule.add(world, "powerUpCollision", powerUpCollisionSystem)
+    schedule.add(world, "audioAfterPowerUp", audioSystem)
     schedule.add(world, "scaredTimer", scaredTimerSystem)
     schedule.add(world, "boundaryCollision", boundaryCollisionSystem)
     schedule.add(world, "render", renderSystem)
     schedule.add(world, "movement", movementSystem)
     schedule.add(world, "ghostAi", ghostAiSystem)
     schedule.add(world, "playerRotation", playerRotationSystem)
-    schedule.add(world, "audio", audioSystem)
 }
 
 function inputSystem(keyControl) {

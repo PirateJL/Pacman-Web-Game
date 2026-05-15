@@ -1,5 +1,5 @@
 import { Schedule, World } from "archetype-ecs-lib"
-import { Utils } from "../utils.js"
+import { Utils } from "./utils.js"
 import { spawnActors, spawnLevel } from "./level.js"
 import {
     AssetCache,
@@ -243,6 +243,7 @@ class GameController {
         this.input.currentKeyboardType = this.currentKeyboardType
 
         if (Utils.Functions.empty(this.currentKeyboardType)) {
+            this.audio.play('intro').remove()
             this.showKeyboardPrompt()
         } else {
             this.PAUSE = false
