@@ -19,14 +19,67 @@ export class InputResource {
 }
 
 export class GameState {
-    constructor(scoreElement) {
+    constructor(hudElements = {}) {
         this.score = 0
-        this.scoreElement = scoreElement
+        this.highScore = this.loadHighScore()
+        this.level = 1
+        this.lives = 3
+        this.powerUpsLeft = 0
+        this.activePowerUps = 0
+        this.hudElements = hudElements
+        this.scoreElement = hudElements.score
         this.animationId = null
         this.paused = true
         this.ready = false
         this.ended = false
         this.lastTimestamp = 0
+        this.updateHud()
+    }
+
+    addScore(value) {
+        this.score += value
+        if (this.score > this.highScore) {
+            this.highScore = this.score
+            this.saveHighScore()
+        }
+        this.updateHud()
+    }
+
+    setLives(lives) {
+        this.lives = Math.max(0, lives)
+        this.updateHud()
+    }
+
+    setPowerUps(powerUpsLeft, activePowerUps) {
+        this.powerUpsLeft = powerUpsLeft
+        this.activePowerUps = activePowerUps
+        this.updateHud()
+    }
+
+    updateHud() {
+        this.setText("score", this.score)
+        this.setText("highScore", this.highScore)
+        this.setText("level", this.level)
+        this.setText("lives", this.lives)
+        this.setText("powerUps", `${this.activePowerUps} active / ${this.powerUpsLeft} left`)
+    }
+
+    setText(key, value) {
+        if (this.hudElements[key]) this.hudElements[key].textContent = value
+    }
+
+    loadHighScore() {
+        try {
+            return Number(window.localStorage.getItem("PacmanWebGameHighScore")) || 0
+        } catch (exception) {
+            return 0
+        }
+    }
+
+    saveHighScore() {
+        try {
+            window.localStorage.setItem("PacmanWebGameHighScore", String(this.highScore))
+        } catch (exception) {}
     }
 }
 

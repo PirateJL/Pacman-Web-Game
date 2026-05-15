@@ -31,6 +31,11 @@ export const LEVEL_MAP = [
     ["4", "-", "-", "-", "-", "-", "-", "-", "-", "-", "3"]
 ]
 
+export const GRID_COLUMNS = LEVEL_MAP[0].length
+export const GRID_ROWS = LEVEL_MAP.length
+export const GAME_WIDTH = GRID_COLUMNS * TILE_SIZE
+export const GAME_HEIGHT = GRID_ROWS * TILE_SIZE
+
 const IMAGE_URLS = {
     "-": new URL("./assets/images/pipeHorizontal.png", import.meta.url).href,
     "|": new URL("./assets/images/pipeVertical.png", import.meta.url).href,

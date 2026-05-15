@@ -29,7 +29,8 @@ export const SYSTEM_PHASES = [
     "render",
     "movement",
     "ghostAi",
-    "playerRotation"
+    "playerRotation",
+    "hud"
 ]
 
 export function registerSystems(schedule, world, keyControl) {
@@ -49,6 +50,7 @@ export function registerSystems(schedule, world, keyControl) {
     schedule.add(world, "movement", movementSystem)
     schedule.add(world, "ghostAi", ghostAiSystem)
     schedule.add(world, "playerRotation", playerRotationSystem)
+    schedule.add(world, "hud", hudSystem)
 }
 
 function inputSystem(keyControl) {
@@ -78,8 +80,7 @@ function pelletCollisionSystem(world) {
         if (!circlesOverlap(position, collider.radius, player.position, player.collider.radius)) continue
 
         world.cmd().despawn(e)
-        state.score += pellet.value
-        state.scoreElement.innerHTML = state.score
+        state.addScore(pellet.value)
         world.emit(PlaySoundEvent, new PlaySoundEvent("waka"))
     }
 }
@@ -238,6 +239,17 @@ function audioSystem(world) {
     world.drainEvents(PlaySoundEvent, event => audio.play(event.name, event.params))
 }
 
+function hudSystem(world) {
+    const state = world.requireResource(GameState)
+    let powerUpsLeft = 0
+    let activePowerUps = 0
+
+    for (const _ of world.query(PowerUp)) powerUpsLeft++
+    for (const _ of world.query(Scared)) activePowerUps++
+
+    state.setPowerUps(powerUpsLeft, activePowerUps)
+}
+
 function applyRequestedVelocity(world, player, requestedVelocity, axis) {
     if (collidesWithBoundary(world, player.position, player.collider.radius, requestedVelocity)) {
         player.velocity[axis] = 0
@@ -309,6 +321,7 @@ function endGame(world, message, soundName) {
     if (state.ended) return
 
     state.ended = true
+    if (soundName === "endGame") state.setLives(0)
     console.log(message)
     cancelAnimationFrame(state.animationId)
     world.emit(PlaySoundEvent, new PlaySoundEvent(soundName))

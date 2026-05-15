@@ -1,6 +1,6 @@
 import { Schedule, World } from "archetype-ecs-lib"
 import { Utils } from "./utils.js"
-import { spawnActors, spawnLevel } from "./level.js"
+import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE, spawnActors, spawnLevel } from "./level.js"
 import {
     AssetCache,
     AudioResource,
@@ -190,20 +190,27 @@ class GameController {
         this.PromptWindow = PromptWindow
         this.Audio = new GameAudio(this)
         this.animate = this.animate.bind(this)
+        this.resizeBoard = this.resizeBoard.bind(this)
     }
 
     init() {
-        const scoreElement = document.getElementById("score")
+        const hudElements = {
+            score: document.getElementById("score"),
+            highScore: document.getElementById("highScore"),
+            level: document.getElementById("level"),
+            lives: document.getElementById("lives"),
+            powerUps: document.getElementById("powerUps")
+        }
         const gameCanvas = document.getElementById("TheGame")
         const gameCanvasContext = gameCanvas.getContext("2d")
-        gameCanvas.width = window.innerWidth
-        gameCanvas.height = window.innerHeight
+        gameCanvas.width = GAME_WIDTH
+        gameCanvas.height = GAME_HEIGHT
 
         const world = new World()
         const schedule = new Schedule()
         const assets = new AssetCache()
         const input = new InputResource()
-        const state = new GameState(scoreElement)
+        const state = new GameState(hudElements)
         const audio = new AudioResource()
 
         world.setResource(CanvasResource, new CanvasResource(gameCanvas, gameCanvasContext))
@@ -224,9 +231,31 @@ class GameController {
 
         this.initKeyControl()
         this.initMovementKeys()
+        this.resizeBoard()
+        window.addEventListener("resize", this.resizeBoard)
         this.READY = true
         state.ready = true
         this.animate()
+    }
+
+    resizeBoard() {
+        const board = document.querySelector(".game-board")
+        const canvas = document.getElementById("TheGame")
+        const hud = document.querySelector(".hud")
+        if (!board || !canvas || !hud) return
+
+        const shellPadding = 32
+        const availableWidth = Math.max(240, window.innerWidth - 40)
+        const availableHeight = Math.max(260, window.innerHeight - hud.offsetHeight - shellPadding - 12)
+        const scale = Math.min(availableWidth / GAME_WIDTH, availableHeight / GAME_HEIGHT, 1.6)
+        const width = Math.floor(GAME_WIDTH * scale)
+        const height = Math.floor(GAME_HEIGHT * scale)
+
+        board.style.width = `${width}px`
+        board.style.height = `${height}px`
+        board.style.setProperty("--grid-size", `${TILE_SIZE * scale}px`)
+        canvas.style.width = "100%"
+        canvas.style.height = "100%"
     }
 
     animate(timestamp = 0) {
