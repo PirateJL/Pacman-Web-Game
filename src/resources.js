@@ -22,6 +22,7 @@ export class GameState {
     constructor(hudElements = {}) {
         this.score = 0
         this.highScore = this.loadHighScore()
+        this.levelIndex = 0
         this.level = 1
         this.lives = 3
         this.powerUpsLeft = 0
@@ -47,6 +48,12 @@ export class GameState {
 
     setLives(lives) {
         this.lives = Math.max(0, lives)
+        this.updateHud()
+    }
+
+    setLevelIndex(levelIndex) {
+        this.levelIndex = levelIndex
+        this.level = levelIndex + 1
         this.updateHud()
     }
 

@@ -1,6 +1,6 @@
 import { Schedule, World } from "archetype-ecs-lib"
 import { Utils } from "./utils.js"
-import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE, spawnActors, spawnLevel } from "./level.js"
+import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE, loadLevel } from "./level.js"
 import {
     AssetCache,
     AudioResource,
@@ -219,8 +219,7 @@ class GameController {
         world.setResource(AssetCache, assets)
         world.setResource(AudioResource, audio)
 
-        spawnLevel(world, assets)
-        spawnActors(world)
+        loadLevel(world, assets, state.levelIndex)
         registerSystems(schedule, world, this.KeyControll)
 
         this.world = world

@@ -11,8 +11,8 @@ import {
     Sprite,
     Velocity
 } from "./components.js"
-import { PLAYER_SPEED, TILE_SIZE } from "./level.js"
-import { AudioResource, CanvasResource, GameState, InputResource, PlaySoundEvent } from "./resources.js"
+import { hasNextLevel, loadLevel, PLAYER_SPEED, TILE_SIZE } from "./level.js"
+import { AssetCache, AudioResource, CanvasResource, GameState, InputResource, PlaySoundEvent } from "./resources.js"
 
 export const SYSTEM_PHASES = [
     "input",
@@ -107,7 +107,12 @@ function winConditionSystem(world) {
     if (state.ended) return
 
     for (const _ of world.query(Pellet)) return
-    endGame(world, "You WIN", "winGame")
+
+    if (hasNextLevel(state.levelIndex)) {
+        advanceLevel(world)
+    } else {
+        endGame(world, "You WIN", "winGame")
+    }
 }
 
 function powerUpCollisionSystem(world) {
@@ -325,4 +330,14 @@ function endGame(world, message, soundName) {
     console.log(message)
     cancelAnimationFrame(state.animationId)
     world.emit(PlaySoundEvent, new PlaySoundEvent(soundName))
+}
+
+function advanceLevel(world) {
+    const state = world.requireResource(GameState)
+    const assets = world.requireResource(AssetCache)
+    const nextLevelIndex = state.levelIndex + 1
+
+    state.setLevelIndex(nextLevelIndex)
+    loadLevel(world, assets, nextLevelIndex)
+    world.emit(PlaySoundEvent, new PlaySoundEvent("winGame"))
 }

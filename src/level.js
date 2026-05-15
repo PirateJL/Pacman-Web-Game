@@ -7,6 +7,7 @@ import {
     PlayerControlled,
     Position,
     PowerUp,
+    Scared,
     Sprite,
     Velocity
 } from "./components.js"
@@ -15,22 +16,113 @@ export const TILE_SIZE = 40
 export const PLAYER_SPEED = 5
 export const GHOST_SPEED = 4
 
-export const LEVEL_MAP = [
-    ["1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "2"],
-    ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
-    ["|", ".", "b", ".", "[", "7", "]", ".", "b", ".", "|"],
-    ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
-    ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
-    ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
-    ["|", ".", "b", ".", "[", "+", "]", ".", "b", ".", "|"],
-    ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
-    ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
-    ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
-    ["|", ".", "b", ".", "[", "5", "]", ".", "b", ".", "|"],
-    ["|", ".", ".", ".", ".", ".", ".", ".", ".", "p", "|"],
-    ["4", "-", "-", "-", "-", "-", "-", "-", "-", "-", "3"]
+/**
+ * Levels are compose of :
+ *  - width between 10 to 20 squares
+ *  - height between 9 to 15 squares
+ *  - 2 to 5 enimies
+ *  - number of powerup are total enimies - 1
+ */
+export const LEVELS = [
+    {
+        name: "Classic",
+        map: [
+            ["1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "2"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "7", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "+", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "5", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", "p", "|"],
+            ["4", "-", "-", "-", "-", "-", "-", "-", "-", "-", "3"]
+        ],
+        playerStart: { column: 1, row: 1 },
+        ghosts: [
+            { column: 6, row: 1, color: "red" },
+            { column: 6, row: 3, color: "pink" }
+        ]
+    },
+    {
+        name: "Big Classic",
+        map: [
+            ["1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "2"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "7", "]", ".", "b", ".", "b", ".", "[", "7", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "+", "]", ".", "[", "-", "]", ".", "[", "+", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "5", "]", ".", "b", ".", "b", ".", "[", "5", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", "p", ".", ".", ".", ".", ".", ".", ".", "p", "|"],
+            ["4", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "3"]
+        ],
+        playerStart: { column: 1, row: 1 },
+        ghosts: [
+            { column: 6, row: 1, color: "red" },
+            { column: 7, row: 5, color: "pink" },
+            { column: 9, row: 9, color: "orange" }
+        ]
+    },
+    {
+        name: "Crossroads",
+        map: [
+            ["1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "2"],
+            ["|", ".", ".", ".", ".", "p", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", "^", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "+", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "5", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", "_", ".", "[", "]", ".", "|"],
+            ["|", "p", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
+            ["4", "-", "-", "-", "-", "-", "-", "-", "-", "-", "3"]
+        ],
+        playerStart: { column: 1, row: 1 },
+        ghosts: [
+            { column: 6, row: 1, color: "red" },
+            { column: 6, row: 6, color: "pink" },
+            { column: 9, row: 10, color: "orange" }
+        ]
+    },
+    {
+        name: "Final Run",
+        map: [
+            ["1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "2"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", "p", "|"],
+            ["|", ".", "b", ".", "[", "7", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", "p", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "+", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", "p", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "5", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
+            ["4", "-", "-", "-", "-", "-", "-", "-", "-", "-", "3"]
+        ],
+        playerStart: { column: 1, row: 1 },
+        ghosts: [
+            { column: 6, row: 1, color: "red" },
+            { column: 6, row: 3, color: "pink" },
+            { column: 4, row: 9, color: "orange" },
+            { column: 9, row: 6, color: "cyan" }
+        ]
+    }
 ]
 
+export const LEVEL_MAP = LEVELS[0].map
 export const GRID_COLUMNS = LEVEL_MAP[0].length
 export const GRID_ROWS = LEVEL_MAP.length
 export const GAME_WIDTH = GRID_COLUMNS * TILE_SIZE
@@ -55,8 +147,20 @@ const IMAGE_URLS = {
     "8": new URL("./assets/images/pipeConnectorLeft.png", import.meta.url).href
 }
 
-export function spawnLevel(world, assets) {
-    LEVEL_MAP.forEach((row, rowIndex) => {
+export function loadLevel(world, assets, levelIndex) {
+    clearLevel(world)
+    spawnLevel(world, assets, levelIndex)
+    spawnActors(world, levelIndex)
+}
+
+export function hasNextLevel(levelIndex) {
+    return levelIndex + 1 < LEVELS.length
+}
+
+export function spawnLevel(world, assets, levelIndex = 0) {
+    const level = LEVELS[levelIndex] || LEVELS[0]
+
+    level.map.forEach((row, rowIndex) => {
         row.forEach((symbol, columnIndex) => {
             const x = columnIndex * TILE_SIZE
             const y = rowIndex * TILE_SIZE
@@ -85,25 +189,41 @@ export function spawnLevel(world, assets) {
     })
 }
 
-export function spawnActors(world) {
+export function spawnActors(world, levelIndex = 0) {
+    const level = LEVELS[levelIndex] || LEVELS[0]
+    const playerStart = level.playerStart
+
     world.spawnWith(
-        [Position, new Position(TILE_SIZE + TILE_SIZE / 2, TILE_SIZE + TILE_SIZE / 2)],
+        [Position, new Position(tileCenter(playerStart.column), tileCenter(playerStart.row))],
         [Velocity, new Velocity(0, 0)],
         [CircleCollider, new CircleCollider(15)],
         [PlayerControlled, new PlayerControlled()]
     )
 
-    world.spawnWith(
-        [Position, new Position(TILE_SIZE * 6 + TILE_SIZE / 2, TILE_SIZE + TILE_SIZE / 2)],
-        [Velocity, new Velocity(GHOST_SPEED, 0)],
-        [CircleCollider, new CircleCollider(15)],
-        [GhostAI, new GhostAI("red", GHOST_SPEED)]
-    )
+    level.ghosts.forEach(ghost => {
+        world.spawnWith(
+            [Position, new Position(tileCenter(ghost.column), tileCenter(ghost.row))],
+            [Velocity, new Velocity(GHOST_SPEED, 0)],
+            [CircleCollider, new CircleCollider(15)],
+            [GhostAI, new GhostAI(ghost.color, GHOST_SPEED)]
+        )
+    })
+}
 
-    world.spawnWith(
-        [Position, new Position(TILE_SIZE * 6 + TILE_SIZE / 2, TILE_SIZE * 3 + TILE_SIZE / 2)],
-        [Velocity, new Velocity(GHOST_SPEED, 0)],
-        [CircleCollider, new CircleCollider(15)],
-        [GhostAI, new GhostAI("pink", GHOST_SPEED)]
-    )
+function clearLevel(world) {
+    const entities = new Map()
+    const collect = ({ e }) => entities.set(e.id, e)
+
+    for (const row of world.query(Boundary)) collect(row)
+    for (const row of world.query(Pellet)) collect(row)
+    for (const row of world.query(PowerUp)) collect(row)
+    for (const row of world.query(PlayerControlled)) collect(row)
+    for (const row of world.query(GhostAI)) collect(row)
+    for (const row of world.query(Scared)) collect(row)
+
+    world.despawnMany([...entities.values()])
+}
+
+function tileCenter(tile) {
+    return TILE_SIZE * tile + TILE_SIZE / 2
 }
