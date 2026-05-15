@@ -20,8 +20,8 @@ export const GHOST_SPEED = 4
  * Levels are compose of :
  *  - width between 10 to 20 squares
  *  - height between 9 to 15 squares
- *  - 2 to 5 enimies
- *  - number of powerup are total enimies - 1
+ *  - 2 to 5 ghosts
+ *  - number of powerup are total ghosts - 1
  */
 export const LEVELS = [
     {
@@ -72,59 +72,61 @@ export const LEVELS = [
         ]
     },
     {
-        name: "Crossroads",
+        name: "Spiral Chase",
         map: [
-            ["1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "2"],
-            ["|", ".", ".", ".", ".", "p", ".", ".", ".", ".", "|"],
-            ["|", ".", "[", "]", ".", "^", ".", "[", "]", ".", "|"],
-            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
-            ["|", ".", "b", ".", "[", "+", "]", ".", "b", ".", "|"],
-            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
-            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
-            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
-            ["|", ".", "b", ".", "[", "5", "]", ".", "b", ".", "|"],
-            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
-            ["|", ".", "[", "]", ".", "_", ".", "[", "]", ".", "|"],
-            ["|", "p", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
-            ["4", "-", "-", "-", "-", "-", "-", "-", "-", "-", "3"]
+            ["1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "2"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", "p", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "7", "]", ".", "b", ".", "b", ".", "[", "7", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", "p", "b", ".", "[", "+", "]", ".", "b", ".", "b", ".", "[", "+", "]", ".", "b", "p", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "5", "]", ".", "b", ".", "b", ".", "[", "5", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
+            ["4", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "3"]
         ],
         playerStart: { column: 1, row: 1 },
         ghosts: [
-            { column: 6, row: 1, color: "red" },
-            { column: 6, row: 6, color: "pink" },
-            { column: 9, row: 10, color: "orange" }
+            { column: 8, row: 1, color: "red" },
+            { column: 3, row: 5, color: "pink" },
+            { column: 11, row: 7, color: "orange" },
+            { column: 9, row: 11, color: "cyan" }
         ]
     },
     {
-        name: "Final Run",
+        name: "Gauntlet",
         map: [
-            ["1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "2"],
-            ["|", ".", ".", ".", ".", ".", ".", ".", ".", "p", "|"],
-            ["|", ".", "b", ".", "[", "7", "]", ".", "b", ".", "|"],
-            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
-            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
-            ["|", "p", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
-            ["|", ".", "b", ".", "[", "+", "]", ".", "b", ".", "|"],
-            ["|", ".", ".", ".", ".", "_", ".", ".", ".", "p", "|"],
-            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
-            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
-            ["|", ".", "b", ".", "[", "5", "]", ".", "b", ".", "|"],
-            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
-            ["4", "-", "-", "-", "-", "-", "-", "-", "-", "-", "3"]
+            ["1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "2"],
+            ["|", ".", ".", ".", ".", "p", ".", ".", ".", ".", ".", ".", ".", "p", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "7", "]", ".", "[", "-", "]", ".", "[", "7", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", ".", ".", "p", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "+", "]", ".", "[", "-", "]", ".", "[", "+", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", ".", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", "[", "]", ".", "[", "]", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "5", "]", ".", "[", "-", "]", ".", "[", "5", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "p", "|"],
+            ["4", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "3"]
         ],
         playerStart: { column: 1, row: 1 },
         ghosts: [
-            { column: 6, row: 1, color: "red" },
-            { column: 6, row: 3, color: "pink" },
-            { column: 4, row: 9, color: "orange" },
-            { column: 9, row: 6, color: "cyan" }
+            { column: 9, row: 1, color: "red" },
+            { column: 4, row: 4, color: "pink" },
+            { column: 11, row: 5, color: "orange" },
+            { column: 9, row: 9, color: "cyan" },
+            { column: 15, row: 11, color: "purple" }
         ]
-    }
+    },
 ]
 
 export const LEVEL_MAP = LEVELS[0].map
-export const GRID_COLUMNS = LEVEL_MAP[0].length
-export const GRID_ROWS = LEVEL_MAP.length
+export const GRID_COLUMNS = Math.max(...LEVELS.map(level => level.map[0].length))
+export const GRID_ROWS = Math.max(...LEVELS.map(level => level.map.length))
 export const GAME_WIDTH = GRID_COLUMNS * TILE_SIZE
 export const GAME_HEIGHT = GRID_ROWS * TILE_SIZE
 
@@ -191,7 +193,7 @@ export function spawnLevel(world, assets, levelIndex = 0) {
 
 export function spawnActors(world, levelIndex = 0) {
     const level = LEVELS[levelIndex] || LEVELS[0]
-    const playerStart = level.playerStart
+    const playerStart = resolveSpawnTile(level, level.playerStart)
 
     world.spawnWith(
         [Position, new Position(tileCenter(playerStart.column), tileCenter(playerStart.row))],
@@ -201,8 +203,10 @@ export function spawnActors(world, levelIndex = 0) {
     )
 
     level.ghosts.forEach(ghost => {
+        const ghostStart = resolveSpawnTile(level, ghost)
+
         world.spawnWith(
-            [Position, new Position(tileCenter(ghost.column), tileCenter(ghost.row))],
+            [Position, new Position(tileCenter(ghostStart.column), tileCenter(ghostStart.row))],
             [Velocity, new Velocity(GHOST_SPEED, 0)],
             [CircleCollider, new CircleCollider(15)],
             [GhostAI, new GhostAI(ghost.color, GHOST_SPEED)]
@@ -226,4 +230,33 @@ function clearLevel(world) {
 
 function tileCenter(tile) {
     return TILE_SIZE * tile + TILE_SIZE / 2
+}
+
+function resolveSpawnTile(level, spawn) {
+    if (isWalkableSpawn(level, spawn.column, spawn.row)) return spawn
+
+    const maxRadius = Math.max(level.map.length, level.map[0].length)
+    for (let radius = 1; radius <= maxRadius; radius++) {
+        const fallback = findWalkableAtRadius(level, spawn, radius, ".") ||
+            findWalkableAtRadius(level, spawn, radius, "p")
+        if (fallback) return fallback
+    }
+
+    return { column: 1, row: 1 }
+}
+
+function findWalkableAtRadius(level, spawn, radius, symbol) {
+    for (let row = spawn.row - radius; row <= spawn.row + radius; row++) {
+        for (let column = spawn.column - radius; column <= spawn.column + radius; column++) {
+            if (Math.abs(column - spawn.column) + Math.abs(row - spawn.row) !== radius) continue
+            if (level.map[row]?.[column] === symbol) return { column, row }
+        }
+    }
+
+    return null
+}
+
+function isWalkableSpawn(level, column, row) {
+    const symbol = level.map[row]?.[column]
+    return symbol === "." || symbol === "p"
 }
