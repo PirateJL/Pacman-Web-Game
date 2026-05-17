@@ -185,7 +185,18 @@ function renderSystem(world) {
 }
 
 function movementSystem(world) {
-    for (const { c1: position, c2: velocity } of world.query(Position, Velocity)) {
+    for (const { c1: position, c2: velocity, c3: collider, c4: ghost } of world.query(Position, Velocity, CircleCollider, GhostAI)) {
+        const blocksCageDoor = option => isGhostWaitingInCage(ghost) && wouldLeaveCage(position, option, ghost)
+
+        if (collidesWithBoundary(world, position, collider.radius, velocity) || blocksCageDoor(velocity)) {
+            applyGhostFallbackVelocity(world, position, collider.radius, velocity, ghost.speed, blocksCageDoor)
+        }
+
+        position.x += velocity.x
+        position.y += velocity.y
+    }
+
+    for (const { c1: position, c2: velocity } of world.query(Position, Velocity, CircleCollider, PlayerControlled)) {
         position.x += velocity.x
         position.y += velocity.y
     }
@@ -196,8 +207,11 @@ function movementSystem(world) {
     }
 }
 
-function ghostAiSystem(world) {
+function ghostAiSystem(world, dt = 0) {
     for (const { c1: position, c2: velocity, c3: collider, c4: ghost } of world.query(Position, Velocity, CircleCollider, GhostAI)) {
+        updateGhostCageReleaseDelay(ghost, dt)
+        if (!isGhostWaitingInCage(ghost) && guideGhostOutOfCage(world, position, velocity, collider.radius, ghost)) continue
+
         const collisions = []
 
         if (collidesWithBoundary(world, position, collider.radius, { x: ghost.speed, y: 0 })) collisions.push("right")
@@ -270,6 +284,77 @@ function applyRequestedVelocity(world, player, requestedVelocity, axis) {
     }
 }
 
+function applyGhostFallbackVelocity(world, position, radius, velocity, speed, blocksDirection = () => false) {
+    const reverse = { x: -velocity.x, y: -velocity.y }
+    const options = [
+        { x: speed, y: 0 },
+        { x: -speed, y: 0 },
+        { x: 0, y: speed },
+        { x: 0, y: -speed }
+    ]
+        .filter(option => !sameVelocity(option, velocity))
+        .filter(option => !blocksDirection(option))
+        .filter(option => !collidesWithBoundary(world, position, radius, option))
+
+    const direction = options.find(option => sameVelocity(option, reverse)) ||
+        options[Math.floor(Math.random() * options.length)] ||
+        { x: 0, y: 0 }
+
+    velocity.x = direction.x
+    velocity.y = direction.y
+}
+
+function guideGhostOutOfCage(world, position, velocity, radius, ghost) {
+    if (!ghost.cageExit) return false
+
+    const target = {
+        x: tileCenter(ghost.cageExit.column),
+        y: tileCenter(ghost.cageExit.row)
+    }
+
+    if (isNear(position.x, target.x, ghost.speed) && isNear(position.y, target.y, ghost.speed)) {
+        position.x = target.x
+        position.y = target.y
+        ghost.cageExit = null
+        ghost.prevCollisions = []
+        return false
+    }
+
+    const horizontal = getAxisVelocity(position.x, target.x, ghost.speed, "x")
+    const vertical = getAxisVelocity(position.y, target.y, ghost.speed, "y")
+    const preferred = horizontal || vertical
+    const fallback = preferred === horizontal ? vertical : horizontal
+    const direction = [preferred, fallback].find(option => option && !collidesWithBoundary(world, position, radius, option))
+
+    if (direction) {
+        velocity.x = direction.x
+        velocity.y = direction.y
+    } else {
+        applyGhostFallbackVelocity(world, position, radius, velocity, ghost.speed)
+    }
+
+    return true
+}
+
+function updateGhostCageReleaseDelay(ghost, dt) {
+    if (!isGhostWaitingInCage(ghost)) return
+    ghost.cageReleaseDelay = Math.max(0, ghost.cageReleaseDelay - dt * 1000)
+}
+
+function isGhostWaitingInCage(ghost) {
+    return ghost.cageExit && ghost.cageReleaseDelay > 0
+}
+
+function wouldLeaveCage(position, velocity, ghost) {
+    if (!ghost.cageExit || velocity.y >= 0) return false
+
+    const doorX = tileCenter(ghost.cageExit.column)
+    const topInsideY = tileCenter(ghost.cageExit.row + 2)
+
+    return Math.abs(position.x - doorX) < TILE_SIZE / 2 &&
+        position.y <= topInsideY + ghost.speed
+}
+
 function getPlayer(world) {
     for (const { c1: position, c2: velocity, c3: collider, c4: player } of world.query(Position, Velocity, CircleCollider, PlayerControlled)) {
         return { position, velocity, collider, player }
@@ -301,6 +386,21 @@ function circlesOverlap(positionA, radiusA, positionB, radiusB) {
     return Math.hypot(positionA.x - positionB.x, positionA.y - positionB.y) < radiusA + radiusB
 }
 
+function tileCenter(tile) {
+    return TILE_SIZE * tile + TILE_SIZE / 2
+}
+
+function getAxisVelocity(current, target, speed, axis) {
+    if (isNear(current, target, speed)) return null
+
+    const direction = current < target ? speed : -speed
+    return axis === "x" ? { x: direction, y: 0 } : { x: 0, y: direction }
+}
+
+function isNear(current, target, speed) {
+    return Math.abs(current - target) < speed
+}
+
 function drawCircle(context, position, radius, fillStyle) {
     context.beginPath()
     context.arc(position.x, position.y, radius, 0, Math.PI * 2)
@@ -326,6 +426,10 @@ function drawPlayer(context, position, radius, player) {
 function sameDirections(left, right) {
     if (left.length !== right.length) return false
     return left.every((direction, index) => direction === right[index])
+}
+
+function sameVelocity(left, right) {
+    return left.x === right.x && left.y === right.y
 }
 
 function getRenderOffset(levelIndex) {

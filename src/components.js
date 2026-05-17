@@ -42,9 +42,11 @@ export class PlayerControlled {
 }
 
 export class GhostAI {
-    constructor(color = "red", speed = 4) {
+    constructor(color = "red", speed = 4, cageExit = null, cageReleaseDelay = 0) {
         this.color = color
         this.speed = speed
+        this.cageExit = cageExit
+        this.cageReleaseDelay = cageReleaseDelay
         this.prevCollisions = []
     }
 }

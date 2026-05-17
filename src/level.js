@@ -122,6 +122,33 @@ export const LEVELS = [
             { column: 15, row: 11, color: "purple" }
         ]
     },
+    {
+        name: "Ghost Cage",
+        map: [
+            ["1", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "2"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "7", "]", ".", "b", ".", "b", ".", "[", "7", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", ".", ".", "p", ".", ".", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", "1", "-", ".", "-", "2", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", ".", ".", ".", "|", ".", ".", ".", "|", ".", ".", ".", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", "[", "]", ".", "|", ".", ".", ".", "|", ".", "[", "]", ".", ".", ".", "|"],
+            ["|", "p", "b", ".", ".", ".", ".", "|", ".", ".", ".", "|", ".", ".", ".", ".", "b", "p", "|"],
+            ["|", ".", ".", ".", ".", "_", ".", "4", "-", "-", "-", "3", ".", "_", ".", ".", ".", ".", "|"],
+            ["|", ".", "[", "]", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "[", "]", ".", "|"],
+            ["|", ".", ".", ".", ".", "^", ".", ".", ".", ".", ".", ".", ".", "^", ".", ".", ".", ".", "|"],
+            ["|", ".", "b", ".", "[", "5", "]", ".", "b", ".", "b", ".", "[", "5", "]", ".", "b", ".", "|"],
+            ["|", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "|"],
+            ["4", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "3"]
+        ],
+        playerStart: { column: 1, row: 1 },
+        ghosts: [
+            { column: 9, row: 6, color: "red", cageExit: { column: 9, row: 4 }, cageReleaseDelay: 0 },
+            { column: 8, row: 7, color: "pink", cageExit: { column: 9, row: 4 }, cageReleaseDelay: 1000 },
+            { column: 10, row: 7, color: "orange", cageExit: { column: 9, row: 4 }, cageReleaseDelay: 2000 },
+            { column: 9, row: 8, color: "cyan", cageExit: { column: 9, row: 4 }, cageReleaseDelay: 3000 }
+        ]
+    },
 ]
 
 export const LEVEL_MAP = LEVELS[0].map
@@ -216,9 +243,9 @@ export function spawnActors(world, levelIndex = 0) {
 
         world.spawnWith(
             [Position, new Position(tileCenter(ghostStart.column), tileCenter(ghostStart.row))],
-            [Velocity, new Velocity(GHOST_SPEED, 0)],
+            [Velocity, new Velocity(ghost.cageExit && !ghost.cageReleaseDelay ? 0 : GHOST_SPEED, 0)],
             [CircleCollider, new CircleCollider(15)],
-            [GhostAI, new GhostAI(ghost.color, GHOST_SPEED)]
+            [GhostAI, new GhostAI(ghost.color, GHOST_SPEED, ghost.cageExit, ghost.cageReleaseDelay)]
         )
     })
 }
