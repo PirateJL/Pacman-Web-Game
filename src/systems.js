@@ -11,8 +11,8 @@ import {
     Sprite,
     Velocity
 } from "./components.js"
-import { GAME_HEIGHT, GAME_WIDTH, getLevelPixelSize, hasNextLevel, loadLevel, PLAYER_SPEED, TILE_SIZE } from "./level.js"
-import { AssetCache, AudioResource, CanvasResource, GameState, InputResource, PlaySoundEvent } from "./resources.js"
+import { GAME_HEIGHT, GAME_WIDTH, getLevelPixelSize, hasNextLevel, PLAYER_SPEED, TILE_SIZE } from "./level.js"
+import { AudioResource, CanvasResource, GameState, InputResource, PlaySoundEvent } from "./resources.js"
 
 export const SYSTEM_PHASES = [
     "input",
@@ -109,7 +109,7 @@ function winConditionSystem(world) {
     for (const _ of world.query(Pellet)) return
 
     if (hasNextLevel(state.levelIndex)) {
-        advanceLevel(world)
+        completeLevel(world)
     } else {
         endGame(world, "You WIN", "winGame")
     }
@@ -452,15 +452,16 @@ function endGame(world, message, soundName) {
     state.animationId = null
     world.emit(PlaySoundEvent, new PlaySoundEvent(soundName))
     if (soundName === "endGame") state.onGameOver?.()
+    if (soundName === "winGame") state.onGameWon?.()
 }
 
-function advanceLevel(world) {
+function completeLevel(world) {
     const state = world.requireResource(GameState)
-    const assets = world.requireResource(AssetCache)
-    const nextLevelIndex = state.levelIndex + 1
+    if (state.ended) return
 
-    state.setLevelIndex(nextLevelIndex)
-    loadLevel(world, assets, nextLevelIndex)
-    state.captureLevelStartState()
+    state.ended = true
+    cancelAnimationFrame(state.animationId)
+    state.animationId = null
     world.emit(PlaySoundEvent, new PlaySoundEvent("winGame"))
+    state.onLevelComplete?.()
 }

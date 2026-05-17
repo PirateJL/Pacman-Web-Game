@@ -403,6 +403,103 @@ body {
     border-color: #415ec6;
 }
 
+.win-hud {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(0, 0, 0, 0.62);
+}
+
+.win-hud[hidden] {
+    display: none;
+}
+
+.win-hud-final {
+    z-index: 26;
+    background:
+        radial-gradient(circle at center, rgba(255, 232, 74, 0.16), transparent 42%),
+        rgba(0, 0, 0, 0.84);
+}
+
+.win-panel {
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    border: 2px solid #ffe84a;
+    background: #060914;
+    box-shadow: 0 0 0 1px #2436a8, 0 14px 36px rgba(0,0,0,0.7);
+    text-align: center;
+}
+
+.win-panel-mini {
+    width: min(300px, 100%);
+    padding: 18px 16px;
+}
+
+.win-panel-final {
+    width: min(420px, 100%);
+    padding: 28px 22px;
+    box-shadow: 0 0 0 1px #2436a8, 0 0 28px rgba(255,232,74,0.22), 0 18px 42px rgba(0,0,0,0.72);
+}
+
+.win-kicker {
+    margin: 0;
+    color: #9fb7ff;
+    font-family: "Courier New", monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.win-title {
+    margin: 0;
+    color: #ffe84a;
+    font-family: "Courier New", monospace;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.win-title-mini {
+    font-size: 28px;
+}
+
+.win-title-final {
+    font-size: 52px;
+    text-shadow: 3px 3px 0 #2436a8;
+}
+
+.win-score {
+    margin: 0;
+    color: #f8f8f2;
+    font-family: "Courier New", monospace;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.win-button {
+    min-width: 142px;
+    min-height: 42px;
+    border: 1px solid #ffe84a;
+    background: #ffe84a;
+    color: #050505;
+    font-family: "Courier New", monospace;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0;
+    cursor: pointer;
+}
+
+.win-button:hover,
+.win-button:focus-visible {
+    outline: 2px solid #f8f8f2;
+    outline-offset: 2px;
+}
+
 .devtools {
     z-index: 1000;
     width: min(420px, calc(100vw - 32px));

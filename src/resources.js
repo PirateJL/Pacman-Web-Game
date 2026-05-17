@@ -34,9 +34,13 @@ export class GameState {
         this.ready = false
         this.ended = false
         this.gameOverVisible = false
+        this.levelCompleteVisible = false
+        this.finalWinVisible = false
         this.lastTimestamp = 0
         this.levelStartState = null
         this.onGameOver = null
+        this.onLevelComplete = null
+        this.onGameWon = null
         this.updateHud()
     }
 

@@ -187,6 +187,8 @@ class GameController {
         this.assets = null
         this.devTools = null
         this.gameOverHud = null
+        this.levelCompleteHud = null
+        this.finalWinHud = null
         this.introHud = null
         this.introStep = "title"
         this.selectedKeyboardType = null
@@ -221,6 +223,8 @@ class GameController {
         const state = new GameState(hudElements)
         const audio = new AudioResource()
         state.onGameOver = () => this.showGameOverHud()
+        state.onLevelComplete = () => this.showLevelCompleteHud()
+        state.onGameWon = () => this.showFinalWinHud()
 
         world.setResource(CanvasResource, new CanvasResource(gameCanvas, gameCanvasContext))
         world.setResource(InputResource, input)
@@ -243,6 +247,7 @@ class GameController {
         this.initIntroHud()
         this.initMovementKeys()
         this.initGameOverHud()
+        this.initWinHuds()
         this.initDevTools()
         this.resizeBoard()
         window.addEventListener("resize", this.resizeBoard)
@@ -309,11 +314,14 @@ class GameController {
         this.state.setLevelIndex(levelIndex)
         this.state.ended = false
         this.state.gameOverVisible = false
+        this.state.levelCompleteVisible = false
+        this.state.finalWinVisible = false
         this.state.lastTimestamp = 0
         loadLevel(this.world, this.assets, levelIndex)
         this.state.captureLevelStartState()
         this.state.updateHud()
         this.hideGameOverHud()
+        this.hideWinHuds()
 
         if (!this.state.paused && this.state.animationId === null) {
             this.animate()
@@ -525,6 +533,86 @@ class GameController {
         if (this.state) this.state.gameOverVisible = false
     }
 
+    initWinHuds() {
+        this.levelCompleteHud = {
+            root: document.getElementById("levelCompleteHud"),
+            title: document.getElementById("levelCompleteTitle"),
+            score: document.getElementById("levelCompleteScore"),
+            next: document.getElementById("nextLevel")
+        }
+        this.finalWinHud = {
+            root: document.getElementById("finalWinHud"),
+            score: document.getElementById("finalWinScore"),
+            startOver: document.getElementById("finalWinStartOver")
+        }
+
+        this.levelCompleteHud.next?.addEventListener("click", () => this.continueToNextLevel())
+        this.finalWinHud.startOver?.addEventListener("click", () => this.startOver())
+
+        window.addEventListener("keydown", event => {
+            if (this.state?.levelCompleteVisible && event.key === "Enter") {
+                event.preventDefault()
+                this.continueToNextLevel()
+            } else if (this.state?.finalWinVisible && event.key === "Enter") {
+                event.preventDefault()
+                this.startOver()
+            }
+        })
+    }
+
+    showLevelCompleteHud() {
+        if (!this.state || !this.levelCompleteHud?.root) return
+
+        this.clearInput()
+        this.state.levelCompleteVisible = true
+        if (this.levelCompleteHud.title) {
+            this.levelCompleteHud.title.textContent = `Level ${this.state.level} Clear`
+        }
+        if (this.levelCompleteHud.score) {
+            this.levelCompleteHud.score.textContent = `Score ${this.state.score}`
+        }
+        this.levelCompleteHud.root.hidden = false
+        this.levelCompleteHud.next?.focus()
+    }
+
+    showFinalWinHud() {
+        if (!this.state || !this.finalWinHud?.root) return
+
+        this.clearInput()
+        this.state.finalWinVisible = true
+        if (this.finalWinHud.score) {
+            this.finalWinHud.score.textContent = `Final Score ${this.state.score}`
+        }
+        this.finalWinHud.root.hidden = false
+        this.finalWinHud.startOver?.focus()
+    }
+
+    hideWinHuds() {
+        if (this.levelCompleteHud?.root) this.levelCompleteHud.root.hidden = true
+        if (this.finalWinHud?.root) this.finalWinHud.root.hidden = true
+        if (this.state) {
+            this.state.levelCompleteVisible = false
+            this.state.finalWinVisible = false
+        }
+    }
+
+    continueToNextLevel() {
+        if (!this.world || !this.assets || !this.state) return
+
+        this.clearInput()
+        this.hideWinHuds()
+        this.state.setLevelIndex(this.state.levelIndex + 1)
+        this.state.ended = false
+        this.state.paused = !this.input.currentKeyboardType
+        this.state.lastTimestamp = 0
+        this.state.animationId = null
+        loadLevel(this.world, this.assets, this.state.levelIndex)
+        this.state.captureLevelStartState()
+        this.state.updateHud()
+
+        if (!this.state.paused) this.animate()
+    }
+
     retryLevel() {
         if (!this.world || !this.assets || !this.state) return
 
@@ -547,6 +635,7 @@ class GameController {
         this.state.lastTimestamp = 0
         this.state.animationId = null
         this.hideGameOverHud()
+        this.hideWinHuds()
         loadLevel(this.world, this.assets, this.state.levelIndex)
         this.state.updateHud()
 
