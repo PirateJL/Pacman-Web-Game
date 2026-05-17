@@ -1,5 +1,11 @@
 export const Utils = {
     Functions: {
+        /**
+         * Checks whether a value should be treated as absent by legacy UI code.
+         *
+         * @param {*} value Value to inspect.
+         * @returns {boolean} True for null, undefined, and empty arrays.
+         */
         empty : function (value) {
             if (value === null || value === undefined) {
                 return true;
@@ -19,16 +25,18 @@ export const Utils = {
             }
         },
         /**
-         * @description Find and load document element
-         * @param {String} elemId Element id
-         * @returns HTMLElement
+         * Finds a document element by id.
+         *
+         * @param {string} elemId Element id.
+         * @returns {HTMLElement|null}
          */
         load : function (elemId) {return document.getElementById(elemId);},
         /**
-         * @description Add an event listener to html element
-         * @param {HTMLElement} htmlElem 
-         * @param {String} eventName 
-         * @param {Function} eventFunction 
+         * Adds an event listener with a legacy attachEvent fallback.
+         *
+         * @param {HTMLElement} htmlElem Element receiving the listener.
+         * @param {string} eventName Event name without the "on" prefix.
+         * @param {Function} eventFunction Callback to invoke.
          */
         AddEvent : function (htmlElem, eventName, eventFunction) {
             if(htmlElem.attachEvent) { //Internet Explorer
@@ -39,9 +47,10 @@ export const Utils = {
             }
         },
         /**
-         * @description Execute the event from an element
-         * @param {HTMLElement} element 
-         * @param {String} event 
+         * Dispatches a DOM event from an element.
+         *
+         * @param {HTMLElement} element Element dispatching the event.
+         * @param {string} event Event name without the "on" prefix.
          */
         FireEvent : function (element, event) {
             if (element.fireEvent) {element.fireEvent('on' + event);}

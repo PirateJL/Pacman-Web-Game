@@ -17,11 +17,39 @@ export const PLAYER_SPEED = 5
 export const GHOST_SPEED = 4
 
 /**
- * Levels are compose of :
+ * @typedef {{column: number, row: number}} TileCoordinate
+ */
+
+/**
+ * @typedef {Object} GhostSpawn
+ * @property {number} column Spawn column in level-map tile coordinates.
+ * @property {number} row Spawn row in level-map tile coordinates.
+ * @property {string} color Render color used while the ghost is not scared.
+ * @property {TileCoordinate=} cageExit Optional tile target used to guide caged ghosts into the maze.
+ * @property {number=} cageReleaseDelay Milliseconds to wait before the ghost can leave a cage.
+ */
+
+/**
+ * @typedef {Object} LevelDefinition
+ * @property {string} name Display name used by devtools.
+ * @property {string[][]} map Tile symbols for maze geometry, pellets, and power-ups.
+ * @property {TileCoordinate} playerStart Preferred player spawn tile.
+ * @property {GhostSpawn[]} ghosts Ghost spawn definitions for this level.
+ */
+
+/**
+ * Level map legend:
+ *  - image symbols create solid boundary tiles
+ *  - "." creates a score pellet
+ *  - "p" creates a power-up
+ *
+ * Levels are composed of:
  *  - width between 10 to 20 squares
  *  - height between 9 to 15 squares
  *  - 2 to 6 ghosts
- *  - number of powerup are total ghosts - 1
+ *  - number of power-ups are total ghosts - 1
+ *
+ * @type {LevelDefinition[]}
  */
 export const LEVELS = [
     {
@@ -161,6 +189,12 @@ export const GRID_ROWS = Math.max(...LEVELS.map(level => level.map.length))
 export const GAME_WIDTH = GRID_COLUMNS * TILE_SIZE
 export const GAME_HEIGHT = GRID_ROWS * TILE_SIZE
 
+/**
+ * Returns the pixel dimensions of the selected level map.
+ *
+ * @param {number} levelIndex Index in LEVELS.
+ * @returns {{width: number, height: number}}
+ */
 export function getLevelPixelSize(levelIndex) {
     const level = LEVELS[levelIndex] || LEVELS[0]
 
@@ -170,6 +204,9 @@ export function getLevelPixelSize(levelIndex) {
     }
 }
 
+/**
+ * Boundary tile symbols mapped to the sprite image used by renderSystem.
+ */
 const IMAGE_URLS = {
     "-": new URL("./assets/images/pipeHorizontal.png", import.meta.url).href,
     "|": new URL("./assets/images/pipeVertical.png", import.meta.url).href,
@@ -189,16 +226,34 @@ const IMAGE_URLS = {
     "8": new URL("./assets/images/pipeConnectorLeft.png", import.meta.url).href
 }
 
+/**
+ * Replaces the current world entities with a fresh level and its actors.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to mutate.
+ * @param {import("./resources.js").AssetCache} assets Shared image cache.
+ * @param {number} levelIndex Index in LEVELS.
+ */
 export function loadLevel(world, assets, levelIndex) {
     clearLevel(world)
     spawnLevel(world, assets, levelIndex)
     spawnActors(world, levelIndex)
 }
 
+/**
+ * @param {number} levelIndex Current zero-based level index.
+ * @returns {boolean} Whether another level exists after the current one.
+ */
 export function hasNextLevel(levelIndex) {
     return levelIndex + 1 < LEVELS.length
 }
 
+/**
+ * Converts level-map symbols into boundary, pellet, and power-up entities.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to mutate.
+ * @param {import("./resources.js").AssetCache} assets Shared image cache.
+ * @param {number} levelIndex Index in LEVELS.
+ */
 export function spawnLevel(world, assets, levelIndex = 0) {
     const level = LEVELS[levelIndex] || LEVELS[0]
 
@@ -231,6 +286,15 @@ export function spawnLevel(world, assets, levelIndex = 0) {
     })
 }
 
+/**
+ * Spawns Pacman and all ghosts for a level.
+ *
+ * Spawn tiles are resolved to nearby walkable cells so level authors can move
+ * actors without breaking startup if a preferred tile becomes a wall.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to mutate.
+ * @param {number} levelIndex Index in LEVELS.
+ */
 export function spawnActors(world, levelIndex = 0) {
     const level = LEVELS[levelIndex] || LEVELS[0]
     const playerStart = resolveSpawnTile(level, level.playerStart)
@@ -254,6 +318,11 @@ export function spawnActors(world, levelIndex = 0) {
     })
 }
 
+/**
+ * Removes gameplay entities before loading or reloading a level.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to mutate.
+ */
 function clearLevel(world) {
     const entities = new Map()
     const collect = ({ e }) => entities.set(e.id, e)
@@ -268,10 +337,21 @@ function clearLevel(world) {
     world.despawnMany([...entities.values()])
 }
 
+/**
+ * @param {number} tile Tile index in a row or column.
+ * @returns {number} Pixel coordinate for the tile center.
+ */
 function tileCenter(tile) {
     return TILE_SIZE * tile + TILE_SIZE / 2
 }
 
+/**
+ * Finds a valid walkable spawn tile, falling back outward from the requested tile.
+ *
+ * @param {LevelDefinition} level Level being spawned.
+ * @param {TileCoordinate} spawn Preferred spawn tile.
+ * @returns {TileCoordinate}
+ */
 function resolveSpawnTile(level, spawn) {
     if (isWalkableSpawn(level, spawn.column, spawn.row)) return spawn
 
@@ -285,6 +365,15 @@ function resolveSpawnTile(level, spawn) {
     return { column: 1, row: 1 }
 }
 
+/**
+ * Searches one Manhattan-distance ring for a tile with the requested symbol.
+ *
+ * @param {LevelDefinition} level Level being searched.
+ * @param {TileCoordinate} spawn Center of the search.
+ * @param {number} radius Manhattan distance from the center tile.
+ * @param {string} symbol Walkable symbol to find.
+ * @returns {TileCoordinate|null}
+ */
 function findWalkableAtRadius(level, spawn, radius, symbol) {
     for (let row = spawn.row - radius; row <= spawn.row + radius; row++) {
         for (let column = spawn.column - radius; column <= spawn.column + radius; column++) {
@@ -296,6 +385,12 @@ function findWalkableAtRadius(level, spawn, radius, symbol) {
     return null
 }
 
+/**
+ * @param {LevelDefinition} level Level being checked.
+ * @param {number} column Tile column.
+ * @param {number} row Tile row.
+ * @returns {boolean} Whether the tile can hold an actor spawn.
+ */
 function isWalkableSpawn(level, column, row) {
     const symbol = level.map[row]?.[column]
     return symbol === "." || symbol === "p"

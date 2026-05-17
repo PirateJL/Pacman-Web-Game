@@ -14,6 +14,16 @@ import {
 import { GAME_HEIGHT, GAME_WIDTH, getLevelPixelSize, hasNextLevel, PLAYER_SPEED, TILE_SIZE } from "./level.js"
 import { AudioResource, CanvasResource, GameState, InputResource, PlaySoundEvent } from "./resources.js"
 
+/**
+ * @typedef {{x: number, y: number}} Vector2
+ */
+
+/**
+ * Fixed system execution order for one gameplay frame.
+ *
+ * Gameplay events are followed by audio phases so sound effects react to world
+ * changes after collisions and win/loss checks have already run.
+ */
 export const SYSTEM_PHASES = [
     "input",
     "pelletCollision",
@@ -33,6 +43,13 @@ export const SYSTEM_PHASES = [
     "hud"
 ]
 
+/**
+ * Installs all gameplay systems into the ECS schedule.
+ *
+ * @param {import("archetype-ecs-lib").Schedule} schedule Schedule to configure.
+ * @param {import("archetype-ecs-lib").World} world ECS world containing resources and entities.
+ * @param {typeof import("./game.js").Game.KeyControll} keyControl Keyboard-layout helper.
+ */
 export function registerSystems(schedule, world, keyControl) {
     schedule.setOrder(SYSTEM_PHASES)
     schedule.add(world, "input", inputSystem(keyControl))
@@ -53,6 +70,12 @@ export function registerSystems(schedule, world, keyControl) {
     schedule.add(world, "hud", hudSystem)
 }
 
+/**
+ * Builds the input system with the selected keyboard layout helper.
+ *
+ * @param {typeof import("./game.js").Game.KeyControll} keyControl Keyboard-layout helper.
+ * @returns {(world: import("archetype-ecs-lib").World) => void}
+ */
 function inputSystem(keyControl) {
     return function inputSystemForKeyboard(world) {
         const input = world.requireResource(InputResource)
@@ -71,6 +94,11 @@ function inputSystem(keyControl) {
     }
 }
 
+/**
+ * Collects pellets that overlap the player and emits the matching sound event.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to update.
+ */
 function pelletCollisionSystem(world) {
     const state = world.requireResource(GameState)
     const player = getPlayer(world)
@@ -85,6 +113,11 @@ function pelletCollisionSystem(world) {
     }
 }
 
+/**
+ * Handles ghost/player collisions, including eating scared ghosts and ending a run.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to update.
+ */
 function ghostCollisionSystem(world) {
     const state = world.requireResource(GameState)
     const player = getPlayer(world)
@@ -102,6 +135,11 @@ function ghostCollisionSystem(world) {
     }
 }
 
+/**
+ * Ends the level when all pellets have been collected.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to inspect.
+ */
 function winConditionSystem(world) {
     const state = world.requireResource(GameState)
     if (state.ended) return
@@ -115,6 +153,11 @@ function winConditionSystem(world) {
     }
 }
 
+/**
+ * Collects power-ups and refreshes the Scared timer on every ghost.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to update.
+ */
 function powerUpCollisionSystem(world) {
     const player = getPlayer(world)
     if (!player) return
@@ -135,6 +178,12 @@ function powerUpCollisionSystem(world) {
     }
 }
 
+/**
+ * Counts down each Scared component and removes expired ones.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to update.
+ * @param {number} dt Seconds elapsed since the previous frame.
+ */
 function scaredTimerSystem(world, dt) {
     for (const { e, c1: scared } of world.query(Scared)) {
         scared.remaining -= dt * 1000
@@ -142,6 +191,11 @@ function scaredTimerSystem(world, dt) {
     }
 }
 
+/**
+ * Stops the player before their next move would intersect maze geometry.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to inspect and update.
+ */
 function boundaryCollisionSystem(world) {
     const player = getPlayer(world)
     if (!player) return
@@ -152,6 +206,14 @@ function boundaryCollisionSystem(world) {
     }
 }
 
+/**
+ * Draws the current world to the canvas.
+ *
+ * Smaller levels are centered within the maximum canvas size so all level maps
+ * can share one canvas resolution.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to render.
+ */
 function renderSystem(world) {
     const { canvas, context } = world.requireResource(CanvasResource)
     const state = world.requireResource(GameState)
@@ -184,6 +246,14 @@ function renderSystem(world) {
     context.restore()
 }
 
+/**
+ * Applies velocity to actors and advances Pacman's mouth animation.
+ *
+ * Ghosts choose a fallback direction before moving if their current direction
+ * would hit a wall or, for caged ghosts, leave before their release delay.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to update.
+ */
 function movementSystem(world) {
     for (const { c1: position, c2: velocity, c3: collider, c4: ghost } of world.query(Position, Velocity, CircleCollider, GhostAI)) {
         const blocksCageDoor = option => isGhostWaitingInCage(ghost) && wouldLeaveCage(position, option, ghost)
@@ -207,6 +277,12 @@ function movementSystem(world) {
     }
 }
 
+/**
+ * Updates ghost direction choices at intersections and guides caged ghosts out.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to update.
+ * @param {number} dt Seconds elapsed since the previous frame.
+ */
 function ghostAiSystem(world, dt = 0) {
     for (const { c1: position, c2: velocity, c3: collider, c4: ghost } of world.query(Position, Velocity, CircleCollider, GhostAI)) {
         updateGhostCageReleaseDelay(ghost, dt)
@@ -251,6 +327,11 @@ function ghostAiSystem(world, dt = 0) {
     }
 }
 
+/**
+ * Rotates the player drawing based on the current movement direction.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to update.
+ */
 function playerRotationSystem(world) {
     for (const { c1: velocity, c2: player } of world.query(Velocity, PlayerControlled)) {
         if (velocity.x > 0) player.rotation = 0
@@ -260,11 +341,21 @@ function playerRotationSystem(world) {
     }
 }
 
+/**
+ * Plays and drains queued sound events.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world that owns audio events.
+ */
 function audioSystem(world) {
     const audio = world.requireResource(AudioResource)
     world.drainEvents(PlaySoundEvent, event => audio.play(event.name, event.params))
 }
 
+/**
+ * Computes simple HUD counters from the ECS world.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to inspect.
+ */
 function hudSystem(world) {
     const state = world.requireResource(GameState)
     let powerUpsLeft = 0
@@ -276,6 +367,14 @@ function hudSystem(world) {
     state.setPowerUps(powerUpsLeft, activePowerUps)
 }
 
+/**
+ * Applies one requested player velocity axis if it will not immediately hit a boundary.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to inspect.
+ * @param {{position: Position, velocity: Velocity, collider: CircleCollider, player: PlayerControlled}} player Player query result.
+ * @param {Vector2} requestedVelocity Requested movement vector.
+ * @param {"x"|"y"} axis Axis being updated by the input key.
+ */
 function applyRequestedVelocity(world, player, requestedVelocity, axis) {
     if (collidesWithBoundary(world, player.position, player.collider.radius, requestedVelocity)) {
         player.velocity[axis] = 0
@@ -284,6 +383,19 @@ function applyRequestedVelocity(world, player, requestedVelocity, axis) {
     }
 }
 
+/**
+ * Picks a non-blocked replacement direction for a ghost.
+ *
+ * Reversing is preferred so a ghost can recover from moving into a wall, with a
+ * random open direction used as a fallback at intersections.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to inspect.
+ * @param {Position} position Current ghost position.
+ * @param {number} radius Ghost collision radius.
+ * @param {Velocity} velocity Mutable ghost velocity.
+ * @param {number} speed Ghost movement speed.
+ * @param {(velocity: Vector2) => boolean} blocksDirection Extra constraint, such as a closed cage door.
+ */
 function applyGhostFallbackVelocity(world, position, radius, velocity, speed, blocksDirection = () => false) {
     const reverse = { x: -velocity.x, y: -velocity.y }
     const options = [
@@ -304,6 +416,16 @@ function applyGhostFallbackVelocity(world, position, radius, velocity, speed, bl
     velocity.y = direction.y
 }
 
+/**
+ * Moves a ghost from its cage toward the configured exit tile.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to inspect.
+ * @param {Position} position Current ghost position.
+ * @param {Velocity} velocity Mutable ghost velocity.
+ * @param {number} radius Ghost collision radius.
+ * @param {GhostAI} ghost Ghost state.
+ * @returns {boolean} True while the ghost is still being guided toward its exit.
+ */
 function guideGhostOutOfCage(world, position, velocity, radius, ghost) {
     if (!ghost.cageExit) return false
 
@@ -336,15 +458,33 @@ function guideGhostOutOfCage(world, position, velocity, radius, ghost) {
     return true
 }
 
+/**
+ * Reduces a ghost's cage release timer.
+ *
+ * @param {GhostAI} ghost Ghost state.
+ * @param {number} dt Seconds elapsed since the previous frame.
+ */
 function updateGhostCageReleaseDelay(ghost, dt) {
     if (!isGhostWaitingInCage(ghost)) return
     ghost.cageReleaseDelay = Math.max(0, ghost.cageReleaseDelay - dt * 1000)
 }
 
+/**
+ * @param {GhostAI} ghost Ghost state.
+ * @returns {boolean} Whether the ghost is still waiting inside a cage.
+ */
 function isGhostWaitingInCage(ghost) {
     return ghost.cageExit && ghost.cageReleaseDelay > 0
 }
 
+/**
+ * Prevents waiting ghosts from moving upward through the cage door before release.
+ *
+ * @param {Position} position Current ghost position.
+ * @param {Vector2} velocity Direction being tested.
+ * @param {GhostAI} ghost Ghost state.
+ * @returns {boolean} Whether the tested direction would leave the cage early.
+ */
 function wouldLeaveCage(position, velocity, ghost) {
     if (!ghost.cageExit || velocity.y >= 0) return false
 
@@ -355,6 +495,10 @@ function wouldLeaveCage(position, velocity, ghost) {
         position.y <= topInsideY + ghost.speed
 }
 
+/**
+ * @param {import("archetype-ecs-lib").World} world ECS world to query.
+ * @returns {{position: Position, velocity: Velocity, collider: CircleCollider, player: PlayerControlled}|null}
+ */
 function getPlayer(world) {
     for (const { c1: position, c2: velocity, c3: collider, c4: player } of world.query(Position, Velocity, CircleCollider, PlayerControlled)) {
         return { position, velocity, collider, player }
@@ -363,6 +507,15 @@ function getPlayer(world) {
     return null
 }
 
+/**
+ * Tests whether a circular actor would hit any boundary after applying velocity.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to inspect.
+ * @param {Position} position Current circle center.
+ * @param {number} radius Circle radius.
+ * @param {Vector2} velocity Proposed movement.
+ * @returns {boolean}
+ */
 function collidesWithBoundary(world, position, radius, velocity) {
     for (const { c1: boundaryPosition, c2: collider } of world.query(Position, BoxCollider, Boundary)) {
         if (circleCollidesWithRectangle(position, radius, velocity, boundaryPosition, collider)) return true
@@ -371,6 +524,16 @@ function collidesWithBoundary(world, position, radius, velocity) {
     return false
 }
 
+/**
+ * Circle/rectangle collision test that predicts the circle's next position.
+ *
+ * @param {Position} circlePosition Current circle center.
+ * @param {number} radius Circle radius.
+ * @param {Vector2} velocity Proposed movement.
+ * @param {Position} rectanglePosition Rectangle top-left corner.
+ * @param {BoxCollider} rectangle Rectangle dimensions.
+ * @returns {boolean}
+ */
 function circleCollidesWithRectangle(circlePosition, radius, velocity, rectanglePosition, rectangle) {
     const padding = TILE_SIZE / 2 - radius - 1
 
@@ -382,14 +545,34 @@ function circleCollidesWithRectangle(circlePosition, radius, velocity, rectangle
     )
 }
 
+/**
+ * @param {Position} positionA First circle center.
+ * @param {number} radiusA First circle radius.
+ * @param {Position} positionB Second circle center.
+ * @param {number} radiusB Second circle radius.
+ * @returns {boolean} Whether two circles currently overlap.
+ */
 function circlesOverlap(positionA, radiusA, positionB, radiusB) {
     return Math.hypot(positionA.x - positionB.x, positionA.y - positionB.y) < radiusA + radiusB
 }
 
+/**
+ * @param {number} tile Tile index in a row or column.
+ * @returns {number} Pixel coordinate for the tile center.
+ */
 function tileCenter(tile) {
     return TILE_SIZE * tile + TILE_SIZE / 2
 }
 
+/**
+ * Builds an axis-aligned velocity that moves from current toward target.
+ *
+ * @param {number} current Current coordinate.
+ * @param {number} target Target coordinate.
+ * @param {number} speed Speed magnitude.
+ * @param {"x"|"y"} axis Axis to move along.
+ * @returns {Vector2|null} Null when already close enough to the target.
+ */
 function getAxisVelocity(current, target, speed, axis) {
     if (isNear(current, target, speed)) return null
 
@@ -397,10 +580,24 @@ function getAxisVelocity(current, target, speed, axis) {
     return axis === "x" ? { x: direction, y: 0 } : { x: 0, y: direction }
 }
 
+/**
+ * @param {number} current Current coordinate.
+ * @param {number} target Target coordinate.
+ * @param {number} speed Speed threshold.
+ * @returns {boolean} Whether current is close enough to snap to target.
+ */
 function isNear(current, target, speed) {
     return Math.abs(current - target) < speed
 }
 
+/**
+ * Draws one filled circle.
+ *
+ * @param {CanvasRenderingContext2D} context Canvas context.
+ * @param {Position} position Circle center.
+ * @param {number} radius Circle radius.
+ * @param {string} fillStyle CSS fill color.
+ */
 function drawCircle(context, position, radius, fillStyle) {
     context.beginPath()
     context.arc(position.x, position.y, radius, 0, Math.PI * 2)
@@ -409,6 +606,14 @@ function drawCircle(context, position, radius, fillStyle) {
     context.closePath()
 }
 
+/**
+ * Draws Pacman as a rotating wedge whose mouth opening is controlled by PlayerControlled.
+ *
+ * @param {CanvasRenderingContext2D} context Canvas context.
+ * @param {Position} position Player center.
+ * @param {number} radius Player radius.
+ * @param {PlayerControlled} player Player animation state.
+ */
 function drawPlayer(context, position, radius, player) {
     context.save()
     context.translate(position.x, position.y)
@@ -423,15 +628,29 @@ function drawPlayer(context, position, radius, player) {
     context.restore()
 }
 
+/**
+ * @param {string[]} left Direction names in previous order.
+ * @param {string[]} right Direction names in previous order.
+ * @returns {boolean} Whether both direction lists are identical.
+ */
 function sameDirections(left, right) {
     if (left.length !== right.length) return false
     return left.every((direction, index) => direction === right[index])
 }
 
+/**
+ * @param {Vector2} left First velocity.
+ * @param {Vector2} right Second velocity.
+ * @returns {boolean} Whether both vectors are exactly equal.
+ */
 function sameVelocity(left, right) {
     return left.x === right.x && left.y === right.y
 }
 
+/**
+ * @param {number} levelIndex Current level index.
+ * @returns {Vector2} Canvas translation that centers the level inside the max board.
+ */
 function getRenderOffset(levelIndex) {
     const levelSize = getLevelPixelSize(levelIndex)
 
@@ -441,6 +660,13 @@ function getRenderOffset(levelIndex) {
     }
 }
 
+/**
+ * Stops animation, emits the end sound, and opens the matching end-of-game HUD.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to update.
+ * @param {string} message Console message for the result.
+ * @param {"endGame"|"winGame"} soundName Sound and HUD result key.
+ */
 function endGame(world, message, soundName) {
     const state = world.requireResource(GameState)
     if (state.ended) return
@@ -455,6 +681,11 @@ function endGame(world, message, soundName) {
     if (soundName === "winGame") state.onGameWon?.()
 }
 
+/**
+ * Stops the current level and opens the level-complete HUD.
+ *
+ * @param {import("archetype-ecs-lib").World} world ECS world to update.
+ */
 function completeLevel(world) {
     const state = world.requireResource(GameState)
     if (state.ended) return

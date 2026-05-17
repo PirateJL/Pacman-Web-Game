@@ -11,7 +11,13 @@ import {
 } from "./resources.js"
 import { registerSystems, SYSTEM_PHASES } from "./systems.js"
 
+/**
+ * Thin audio facade that keeps legacy Game.Audio.* calls mapped to AudioResource.
+ */
 class GameAudio {
+    /**
+     * @param {GameController} game Owning game controller.
+     */
     constructor(game) {
         this.game = game
     }
@@ -26,13 +32,25 @@ class GameAudio {
     playEatGhost(params = null) { return this.game.audio?.play("eatGhost", params) }
 }
 
+/**
+ * Safe localStorage wrapper. Browsers can throw when storage is disabled.
+ */
 class Storage {
+    /**
+     * @param {string} key Storage key.
+     * @returns {string|null|boolean} Stored value, null, or false when storage is unavailable.
+     */
     static localStorageGet(key) {
         let local = false
         try { local = window.localStorage.getItem(key) } catch (exception) {}
         return local
     }
 
+    /**
+     * @param {string} key Storage key.
+     * @param {string} value Value to persist.
+     * @returns {undefined|boolean} setItem result, or false when storage is unavailable.
+     */
     static localStorageSet(key, value) {
         let local = false
         try { local = window.localStorage.setItem(key, value) } catch (exception) {}
@@ -40,6 +58,9 @@ class Storage {
     }
 }
 
+/**
+ * Keyboard-layout mapping used by inputSystem.
+ */
 class KeyControl {
     static mouve = {
         azerty: {
@@ -56,6 +77,10 @@ class KeyControl {
         }
     }
 
+    /**
+     * @param {string} keyboardType Keyboard layout name, such as AZERTY or QWERTY.
+     * @returns {{up: string[], down: string[], left: string[], right: string[]}}
+     */
     static getLayout(keyboardType) {
         return this.mouve[keyboardType.toLowerCase()]
     }
@@ -77,6 +102,9 @@ class KeyControl {
     }
 }
 
+/**
+ * Legacy modal prompt helper used by older UI flows.
+ */
 class PromptWindow {
     constructor() {
         this.promptL = Utils.Functions.load("promptContent")
@@ -89,6 +117,13 @@ class PromptWindow {
         this.promptNoClose = false
     }
 
+    /**
+     * Renders and opens a prompt.
+     *
+     * @param {string} str HTML prompt content.
+     * @param {(string|[string, string, string?])[]} options Button labels or [label, onclick, style] tuples.
+     * @param {string=} style Optional prompt wrapper class suffix.
+     */
     Prompt(str, options, style) {
         if (!Utils.Functions.empty(style)) this.promptWrapL.className = "framed " + style
         else this.promptWrapL.className = "framed"
@@ -130,10 +165,16 @@ class PromptWindow {
         else Utils.Functions.load("promptClose").style.display = "none"
     }
 
+    /**
+     * Centers the prompt vertically in the viewport.
+     */
     UpdatePrompt() {
         this.promptAnchorL.style.top = Math.floor((window.innerHeight - this.promptWrapL.offsetHeight) / (16 - 2)) + "px"
     }
 
+    /**
+     * Fires the currently focused prompt option.
+     */
     ConfirmPrompt() {
         if (!Utils.Functions.empty(this.promptOn) && Utils.Functions.load("promptOption" + this.promptOptionFocus) &&
             Utils.Functions.load("promptOption" + this.promptOptionFocus).style.display != "none") {
@@ -141,6 +182,11 @@ class PromptWindow {
         }
     }
 
+    /**
+     * Closes the prompt and clears focus state.
+     *
+     * @returns {false|undefined} False when no prompt is open.
+     */
     ClosePrompt() {
         if (!this.promptOn) return false
         this.promptAnchorL.style.display = "none"
@@ -151,6 +197,12 @@ class PromptWindow {
         this.promptNoClose = false
     }
 
+    /**
+     * Moves keyboard focus between visible prompt options.
+     *
+     * @param {number} dir Direction offset, usually -1, 0, or 1.
+     * @param {number=} tryN Internal recursion guard.
+     */
     FocusPromptOption(dir, tryN) {
         let id = this.promptOptionFocus + dir
         if (id < 0) id = this.promptOptionsN - 1
@@ -175,6 +227,9 @@ class PromptWindow {
     }
 }
 
+/**
+ * Coordinates DOM setup, ECS resources, game loop lifecycle, and HUD overlays.
+ */
 class GameController {
     constructor() {
         this.READY = false
@@ -206,6 +261,9 @@ class GameController {
         this.resizeBoard = this.resizeBoard.bind(this)
     }
 
+    /**
+     * Boots the ECS world, creates shared resources, loads the first level, and starts the loop.
+     */
     init() {
         const hudElements = {
             score: document.getElementById("score"),
@@ -260,6 +318,9 @@ class GameController {
         this.animate()
     }
 
+    /**
+     * Scales the visual board to fit the viewport while preserving canvas resolution.
+     */
     resizeBoard() {
         const board = document.querySelector(".game-board")
         const canvas = document.getElementById("TheGame")
@@ -280,6 +341,9 @@ class GameController {
         canvas.style.height = "100%"
     }
 
+    /**
+     * Mounts optional devtools and binds the D+T toggle chord.
+     */
     initDevTools() {
         this.devTools = new DevTools({
             game: this,
@@ -312,6 +376,11 @@ class GameController {
         console.info("Devtools ready: press D+T")
     }
 
+    /**
+     * Reloads the world at a specific level, preserving run state and UI controls.
+     *
+     * @param {number} levelIndex Zero-based target level index.
+     */
     goToLevel(levelIndex) {
         if (!this.world || !this.assets || !this.state) return
 
@@ -334,6 +403,11 @@ class GameController {
         }
     }
 
+    /**
+     * Main animation frame callback.
+     *
+     * @param {number} timestamp requestAnimationFrame timestamp in milliseconds.
+     */
     animate(timestamp = 0) {
         if (!this.state || this.state.paused || this.state.ended) return
 
@@ -344,6 +418,9 @@ class GameController {
         this.devTools?.update()
     }
 
+    /**
+     * Binds pause and mute controls for both buttons and keyboard shortcuts.
+     */
     initGameControls() {
         this.controlsHud = {
             pause: document.getElementById("pauseToggle"),
@@ -376,6 +453,9 @@ class GameController {
         this.updateControlButtons()
     }
 
+    /**
+     * @returns {boolean} Whether pause can be toggled in the current UI/game state.
+     */
     canTogglePause() {
         return Boolean(
             this.state &&
@@ -388,6 +468,9 @@ class GameController {
         )
     }
 
+    /**
+     * Switches between paused and running states when allowed.
+     */
     togglePause() {
         if (!this.canTogglePause()) {
             this.updateControlButtons()
@@ -398,6 +481,9 @@ class GameController {
         else this.pauseGame()
     }
 
+    /**
+     * Pauses the game loop and opens the pause HUD.
+     */
     pauseGame() {
         if (!this.canTogglePause() || this.state.paused) return
 
@@ -410,6 +496,9 @@ class GameController {
         this.updateControlButtons()
     }
 
+    /**
+     * Resumes the game loop from pause.
+     */
     resumeGame() {
         if (!this.canTogglePause() || !this.state.paused) return
 
@@ -431,12 +520,18 @@ class GameController {
         if (this.pauseHud?.root) this.pauseHud.root.hidden = true
     }
 
+    /**
+     * Toggles persisted mute state and updates active audio.
+     */
     toggleMute() {
         this.muted = this.audio?.toggleMuted() ?? !this.muted
         this.Storage.localStorageSet("PacmanWebGameMuted", String(this.muted))
         this.updateControlButtons()
     }
 
+    /**
+     * Synchronizes pause/mute button labels, disabled state, and aria state.
+     */
     updateControlButtons() {
         if (this.controlsHud?.pause) {
             const isPaused = Boolean(this.state?.paused && this.pauseHud?.root && !this.pauseHud.root.hidden)
@@ -450,6 +545,9 @@ class GameController {
         }
     }
 
+    /**
+     * Restores saved keyboard layout but keeps gameplay paused until intro completes.
+     */
     initKeyControl() {
         this.currentKeyboardType = this.Storage.localStorageGet("PacmanWebGameKeyboard")
         this.selectedKeyboardType = this.currentKeyboardType || "QWERTY"
@@ -458,6 +556,9 @@ class GameController {
         this.state.paused = true
     }
 
+    /**
+     * Builds the intro overlay and keyboard-layout selection flow.
+     */
     initIntroHud() {
         this.introHud = {
             root: document.getElementById("introHud"),
@@ -501,6 +602,11 @@ class GameController {
         })
     }
 
+    /**
+     * Shows one panel of the intro overlay.
+     *
+     * @param {"title"|"controls"|"countdown"} step Intro step to show.
+     */
     showIntroStep(step) {
         if (!this.introHud?.root) return
 
@@ -517,6 +623,9 @@ class GameController {
         }
     }
 
+    /**
+     * Rebuilds the keyboard layout chooser from availableKeyboards.
+     */
     renderKeyboardOptions() {
         if (!this.introHud?.keyboardOptions) return
 
@@ -559,6 +668,11 @@ class GameController {
         }
     }
 
+    /**
+     * Moves keyboard-layout selection with wrapping.
+     *
+     * @param {number} direction Direction offset, typically -1 or 1.
+     */
     changeSelectedKeyboard(direction) {
         const currentIndex = this.availableKeyboards.indexOf(this.selectedKeyboardType)
         const nextIndex = (currentIndex + direction + this.availableKeyboards.length) % this.availableKeyboards.length
@@ -566,6 +680,9 @@ class GameController {
         this.renderKeyboardOptions()
     }
 
+    /**
+     * Confirms keyboard layout, plays the intro sound, then starts gameplay after the countdown.
+     */
     startIntroCountdown() {
         if (!this.introHud?.root || this.introStep === "countdown") return
 
@@ -591,6 +708,11 @@ class GameController {
         }, 700)
     }
 
+    /**
+     * Stores the active keyboard layout in both input state and localStorage.
+     *
+     * @param {string} keyboardType Keyboard layout name.
+     */
     selectKeyboard(keyboardType) {
         this.Storage.localStorageSet("PacmanWebGameKeyboard", keyboardType)
         this.currentKeyboardType = keyboardType
@@ -598,6 +720,9 @@ class GameController {
         this.selectedKeyboardType = keyboardType
     }
 
+    /**
+     * Closes the intro overlay and starts the animation loop.
+     */
     beginGameplay() {
         if (!this.state || !this.introHud?.root) return
 
@@ -611,6 +736,9 @@ class GameController {
         if (this.state.animationId === null) this.animate()
     }
 
+    /**
+     * Binds retry/start-over controls for the game-over overlay.
+     */
     initGameOverHud() {
         this.gameOverHud = {
             root: document.getElementById("gameOverHud"),
@@ -634,6 +762,9 @@ class GameController {
         })
     }
 
+    /**
+     * Opens the game-over overlay after a losing collision.
+     */
     showGameOverHud() {
         if (!this.state || !this.gameOverHud?.root) return
 
@@ -644,12 +775,18 @@ class GameController {
         this.updateControlButtons()
     }
 
+    /**
+     * Closes the game-over overlay and clears its state flag.
+     */
     hideGameOverHud() {
         if (this.gameOverHud?.root) this.gameOverHud.root.hidden = true
         if (this.state) this.state.gameOverVisible = false
         this.updateControlButtons()
     }
 
+    /**
+     * Binds level-complete and final-win overlays.
+     */
     initWinHuds() {
         this.levelCompleteHud = {
             root: document.getElementById("levelCompleteHud"),
@@ -677,6 +814,9 @@ class GameController {
         })
     }
 
+    /**
+     * Opens the level-complete overlay and displays current level score.
+     */
     showLevelCompleteHud() {
         if (!this.state || !this.levelCompleteHud?.root) return
 
@@ -694,6 +834,9 @@ class GameController {
         this.updateControlButtons()
     }
 
+    /**
+     * Opens the final-win overlay after the last level.
+     */
     showFinalWinHud() {
         if (!this.state || !this.finalWinHud?.root) return
 
@@ -708,6 +851,9 @@ class GameController {
         this.updateControlButtons()
     }
 
+    /**
+     * Closes all win-state overlays and clears their state flags.
+     */
     hideWinHuds() {
         if (this.levelCompleteHud?.root) this.levelCompleteHud.root.hidden = true
         if (this.finalWinHud?.root) this.finalWinHud.root.hidden = true
@@ -718,6 +864,9 @@ class GameController {
         this.updateControlButtons()
     }
 
+    /**
+     * Advances to the next level while preserving score and lives.
+     */
     continueToNextLevel() {
         if (!this.world || !this.assets || !this.state) return
 
@@ -736,6 +885,9 @@ class GameController {
         if (!this.state.paused) this.animate()
     }
 
+    /**
+     * Restarts the current level from its captured start state.
+     */
     retryLevel() {
         if (!this.world || !this.assets || !this.state) return
 
@@ -743,6 +895,9 @@ class GameController {
         this.restartFromState()
     }
 
+    /**
+     * Resets the whole run to level one.
+     */
     startOver() {
         if (!this.world || !this.assets || !this.state) return
 
@@ -751,6 +906,9 @@ class GameController {
         this.restartFromState()
     }
 
+    /**
+     * Reloads the current level using existing GameState values.
+     */
     restartFromState() {
         this.clearInput()
         this.state.ended = false
@@ -767,6 +925,9 @@ class GameController {
         if (!this.state.paused) this.animate()
     }
 
+    /**
+     * Clears held movement keys so stale input does not leak between UI states.
+     */
     clearInput() {
         this.input.keys.up.pressed = false
         this.input.keys.left.pressed = false
@@ -775,6 +936,9 @@ class GameController {
         this.input.lastKey = ""
     }
 
+    /**
+     * Binds movement keys into InputResource for the input system to consume.
+     */
     initMovementKeys() {
         addEventListener("keydown", ({ key }) => {
             if (
