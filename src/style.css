@@ -74,6 +74,68 @@ body {
     display: block;
 }
 
+.game-over-hud {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(0, 0, 0, 0.78);
+}
+
+.game-over-hud[hidden] {
+    display: none;
+}
+
+.game-over-panel {
+    width: min(320px, 100%);
+    padding: 22px 18px;
+    border: 2px solid #ffe84a;
+    background: #060914;
+    box-shadow: 0 0 0 1px #2436a8, 0 14px 36px rgba(0,0,0,0.7);
+    text-align: center;
+}
+
+.game-over-title {
+    margin: 0 0 18px;
+    color: #ffe84a;
+    font-family: "Courier New", monospace;
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.game-over-actions {
+    display: grid;
+    gap: 10px;
+}
+
+.game-over-button {
+    min-height: 42px;
+    border: 1px solid #ffe84a;
+    background: #ffe84a;
+    color: #050505;
+    font-family: "Courier New", monospace;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0;
+    cursor: pointer;
+}
+
+.game-over-button:hover,
+.game-over-button:focus-visible {
+    outline: 2px solid #f8f8f2;
+    outline-offset: 2px;
+}
+
+.game-over-button-secondary {
+    background: #111936;
+    color: #f8f8f2;
+    border-color: #415ec6;
+}
+
 .devtools {
     z-index: 1000;
     width: min(420px, calc(100vw - 32px));

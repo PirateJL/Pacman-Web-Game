@@ -186,6 +186,7 @@ class GameController {
         this.audio = null
         this.assets = null
         this.devTools = null
+        this.gameOverHud = null
         this.availableKeyboards = ["AZERTY", "QWERTY"]
         this.currentKeyboardType = null
         this.Storage = Storage
@@ -215,6 +216,7 @@ class GameController {
         const input = new InputResource()
         const state = new GameState(hudElements)
         const audio = new AudioResource()
+        state.onGameOver = () => this.showGameOverHud()
 
         world.setResource(CanvasResource, new CanvasResource(gameCanvas, gameCanvasContext))
         world.setResource(InputResource, input)
@@ -223,6 +225,7 @@ class GameController {
         world.setResource(AudioResource, audio)
 
         loadLevel(world, assets, state.levelIndex)
+        state.captureLevelStartState()
         registerSystems(schedule, world, this.KeyControll)
 
         this.world = world
@@ -234,6 +237,7 @@ class GameController {
 
         this.initKeyControl()
         this.initMovementKeys()
+        this.initGameOverHud()
         this.initDevTools()
         this.resizeBoard()
         window.addEventListener("resize", this.resizeBoard)
@@ -299,9 +303,12 @@ class GameController {
 
         this.state.setLevelIndex(levelIndex)
         this.state.ended = false
+        this.state.gameOverVisible = false
         this.state.lastTimestamp = 0
         loadLevel(this.world, this.assets, levelIndex)
+        this.state.captureLevelStartState()
         this.state.updateHud()
+        this.hideGameOverHud()
 
         if (!this.state.paused && this.state.animationId === null) {
             this.animate()
@@ -373,9 +380,81 @@ class GameController {
         setTimeout(reload, 1500)
     }
 
+    initGameOverHud() {
+        this.gameOverHud = {
+            root: document.getElementById("gameOverHud"),
+            retry: document.getElementById("retryLevel"),
+            startOver: document.getElementById("startOver")
+        }
+
+        this.gameOverHud.retry?.addEventListener("click", () => this.retryLevel())
+        this.gameOverHud.startOver?.addEventListener("click", () => this.startOver())
+
+        window.addEventListener("keydown", event => {
+            if (!this.state?.gameOverVisible) return
+
+            if (event.key === "Enter") {
+                event.preventDefault()
+                this.retryLevel()
+            } else if (event.key === "Escape" || event.key === "Backspace") {
+                event.preventDefault()
+                this.startOver()
+            }
+        })
+    }
+
+    showGameOverHud() {
+        if (!this.state || !this.gameOverHud?.root) return
+
+        this.state.gameOverVisible = true
+        this.gameOverHud.root.hidden = false
+        this.gameOverHud.retry?.focus()
+    }
+
+    hideGameOverHud() {
+        if (this.gameOverHud?.root) this.gameOverHud.root.hidden = true
+        if (this.state) this.state.gameOverVisible = false
+    }
+
+    retryLevel() {
+        if (!this.world || !this.assets || !this.state) return
+
+        this.state.restoreLevelStartState()
+        this.restartFromState()
+    }
+
+    startOver() {
+        if (!this.world || !this.assets || !this.state) return
+
+        this.state.resetRun()
+        this.state.captureLevelStartState()
+        this.restartFromState()
+    }
+
+    restartFromState() {
+        this.clearInput()
+        this.state.ended = false
+        this.state.paused = !this.input.currentKeyboardType
+        this.state.lastTimestamp = 0
+        this.state.animationId = null
+        this.hideGameOverHud()
+        loadLevel(this.world, this.assets, this.state.levelIndex)
+        this.state.updateHud()
+
+        if (!this.state.paused) this.animate()
+    }
+
+    clearInput() {
+        this.input.keys.up.pressed = false
+        this.input.keys.left.pressed = false
+        this.input.keys.down.pressed = false
+        this.input.keys.right.pressed = false
+        this.input.lastKey = ""
+    }
+
     initMovementKeys() {
         addEventListener("keydown", ({ key }) => {
-            if (!this.input.currentKeyboardType) return
+            if (!this.input.currentKeyboardType || this.state?.gameOverVisible) return
 
             if (this.KeyControll.getKeyUP(this.input.currentKeyboardType).includes(key)) {
                 this.input.keys.up.pressed = true
