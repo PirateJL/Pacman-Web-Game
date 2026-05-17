@@ -187,6 +187,10 @@ class GameController {
         this.assets = null
         this.devTools = null
         this.gameOverHud = null
+        this.introHud = null
+        this.introStep = "title"
+        this.selectedKeyboardType = null
+        this.countdownTimer = null
         this.availableKeyboards = ["AZERTY", "QWERTY"]
         this.currentKeyboardType = null
         this.Storage = Storage
@@ -236,6 +240,7 @@ class GameController {
         this.audio = audio
 
         this.initKeyControl()
+        this.initIntroHud()
         this.initMovementKeys()
         this.initGameOverHud()
         this.initDevTools()
@@ -327,57 +332,161 @@ class GameController {
 
     initKeyControl() {
         this.currentKeyboardType = this.Storage.localStorageGet("PacmanWebGameKeyboard")
-        this.input.currentKeyboardType = this.currentKeyboardType
+        this.selectedKeyboardType = this.currentKeyboardType || "QWERTY"
+        this.input.currentKeyboardType = null
+        this.PAUSE = true
+        this.state.paused = true
+    }
 
-        if (Utils.Functions.empty(this.currentKeyboardType)) {
-            this.audio.play('intro').remove()
-            this.showKeyboardPrompt()
-        } else {
-            this.PAUSE = false
-            this.state.paused = false
+    initIntroHud() {
+        this.introHud = {
+            root: document.getElementById("introHud"),
+            titlePanel: document.getElementById("introTitlePanel"),
+            controlsPanel: document.getElementById("introControlsPanel"),
+            countdownPanel: document.getElementById("introCountdownPanel"),
+            keyboardOptions: document.getElementById("keyboardOptions"),
+            start: document.getElementById("introStart"),
+            confirm: document.getElementById("introConfirm"),
+            countdown: document.getElementById("introCountdown")
+        }
+
+        if (!this.introHud.root) return
+
+        this.renderKeyboardOptions()
+        this.showIntroStep("title")
+        this.introHud.start?.addEventListener("click", () => this.showIntroStep("controls"))
+        this.introHud.confirm?.addEventListener("click", () => this.startIntroCountdown())
+
+        window.addEventListener("keydown", event => {
+            if (!this.introHud?.root || this.introHud.root.hidden) return
+
+            if (this.introStep === "title" && (event.key === "Enter" || event.key === " ")) {
+                event.preventDefault()
+                this.showIntroStep("controls")
+            } else if (this.introStep === "controls") {
+                if (event.key === "Enter") {
+                    event.preventDefault()
+                    this.startIntroCountdown()
+                } else if (event.key === "Escape" || event.key === "Backspace") {
+                    event.preventDefault()
+                    this.showIntroStep("title")
+                } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+                    event.preventDefault()
+                    this.changeSelectedKeyboard(-1)
+                } else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+                    event.preventDefault()
+                    this.changeSelectedKeyboard(1)
+                }
+            }
+        })
+    }
+
+    showIntroStep(step) {
+        if (!this.introHud?.root) return
+
+        this.introStep = step
+        this.introHud.titlePanel.hidden = step !== "title"
+        this.introHud.controlsPanel.hidden = step !== "controls"
+        this.introHud.countdownPanel.hidden = step !== "countdown"
+
+        if (step === "title") {
+            this.introHud.start?.focus()
+        } else if (step === "controls") {
+            this.renderKeyboardOptions()
+            this.introHud.confirm?.focus()
         }
     }
 
-    showKeyboardPrompt() {
-        const promptWindow = new this.PromptWindow()
-        let str = ""
+    renderKeyboardOptions() {
+        if (!this.introHud?.keyboardOptions) return
 
-        for (let i = 0; i < this.availableKeyboards.length; i++) {
-            const element = this.availableKeyboards[i]
-            str += `<div id="keyboardSelect-${i}" class="keyboardSelectButton title" style="padding:4px;">${element}</div>`
-        }
+        this.introHud.keyboardOptions.innerHTML = ""
+        for (const keyboardType of this.availableKeyboards) {
+            const button = document.createElement("button")
+            const isSelected = keyboardType === this.selectedKeyboardType
+            const keys = keyboardType === "AZERTY" ? ["Z", "Q", "S", "D"] : ["W", "A", "S", "D"]
 
-        promptWindow.Prompt(
-            "<id ChangeKeyboard><h3 id=\"keyboardSelectHeader\">Select Keyboard</h3>" +
-            "<div class=\"line\"></div>" +
-            str,
-            ["cancel"]
-        )
-
-        for (let i in this.availableKeyboards) {
-            const keyboardType = this.availableKeyboards[i]
-            Utils.Functions.AddEvent(Utils.Functions.load("keyboardSelect-" + i), "click", () => {
-                this.selectKeyboard(keyboardType, promptWindow)
+            button.type = "button"
+            button.className = `keyboard-option${isSelected ? " is-selected" : ""}`
+            button.setAttribute("aria-pressed", String(isSelected))
+            button.innerHTML = `
+                <span class="keyboard-option-label">${keyboardType}</span>
+                <span class="keyboard-option-keys" aria-hidden="true">
+                    <span class="keyboard-key-grid">
+                        <span></span>
+                        <span class="keycap">${keys[0]}</span>
+                        <span></span>
+                        <span class="keycap">${keys[1]}</span>
+                        <span class="keycap">${keys[2]}</span>
+                        <span class="keycap">${keys[3]}</span>
+                    </span>
+                    <span class="keyboard-key-grid">
+                        <span></span>
+                        <span class="keycap">&uarr;</span>
+                        <span></span>
+                        <span class="keycap">&larr;</span>
+                        <span class="keycap">&darr;</span>
+                        <span class="keycap">&rarr;</span>
+                    </span>
+                </span>
+            `
+            button.addEventListener("click", () => {
+                this.selectedKeyboardType = keyboardType
+                this.renderKeyboardOptions()
+                this.introHud.confirm?.focus()
             })
+            this.introHud.keyboardOptions.appendChild(button)
         }
     }
 
-    selectKeyboard(keyboardType, promptWindow) {
+    changeSelectedKeyboard(direction) {
+        const currentIndex = this.availableKeyboards.indexOf(this.selectedKeyboardType)
+        const nextIndex = (currentIndex + direction + this.availableKeyboards.length) % this.availableKeyboards.length
+        this.selectedKeyboardType = this.availableKeyboards[nextIndex]
+        this.renderKeyboardOptions()
+    }
+
+    startIntroCountdown() {
+        if (!this.introHud?.root || this.introStep === "countdown") return
+
+        this.selectKeyboard(this.selectedKeyboardType)
+        this.showIntroStep("countdown")
+
+        const steps = ["3", "2", "1", "GO!"]
+        let stepIndex = 0
+        this.introHud.countdown.textContent = steps[stepIndex]
+        this.Audio.playIntro()
+
+        clearInterval(this.countdownTimer)
+        this.countdownTimer = setInterval(() => {
+            stepIndex++
+            if (stepIndex < steps.length) {
+                this.introHud.countdown.textContent = steps[stepIndex]
+                return
+            }
+
+            clearInterval(this.countdownTimer)
+            this.countdownTimer = null
+            this.beginGameplay()
+        }, 700)
+    }
+
+    selectKeyboard(keyboardType) {
         this.Storage.localStorageSet("PacmanWebGameKeyboard", keyboardType)
         this.currentKeyboardType = keyboardType
         this.input.currentKeyboardType = keyboardType
+        this.selectedKeyboardType = keyboardType
+    }
+
+    beginGameplay() {
+        if (!this.state || !this.introHud?.root) return
+
+        this.clearInput()
+        this.introHud.root.hidden = true
         this.PAUSE = false
         this.state.paused = false
-        promptWindow.ClosePrompt()
-
-        let reloaded = false
-        const reload = function () {
-            if (reloaded) return
-            reloaded = true
-            window.location.reload()
-        }
-        this.Audio.playWaka({ onEnded: reload })
-        setTimeout(reload, 1500)
+        this.state.lastTimestamp = 0
+        if (this.state.animationId === null) this.animate()
     }
 
     initGameOverHud() {
