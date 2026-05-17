@@ -215,21 +215,27 @@ body {
 
 .intro-marquee {
     position: relative;
-    width: min(360px, 90%);
-    height: 34px;
+    width: min(430px, 92vw);
+    height: 42px;
     overflow: hidden;
     border-top: 2px solid #2436a8;
     border-bottom: 2px solid #2436a8;
+    background:
+        linear-gradient(rgba(36,54,168,0.25) 1px, transparent 1px),
+        #050505;
+    background-size: 100% 14px;
 }
 
 .intro-marquee::before {
     content: "";
     position: absolute;
-    top: 15px;
-    left: 0;
+    top: 19px;
+    left: -32px;
     width: 100%;
-    border-top: 4px dotted #ffe84a;
-    opacity: 0.8;
+    height: 6px;
+    background: radial-gradient(circle, #ffe84a 0 3px, transparent 3px) 0 0 / 32px 6px repeat-x;
+    opacity: 0.72;
+    animation: introDotTrack 1.1s linear infinite;
 }
 
 .intro-pacman,
@@ -241,12 +247,15 @@ body {
 }
 
 .intro-pacman {
-    left: 20px;
+    left: 0;
     width: 24px;
     height: 24px;
     border-radius: 50%;
     background: conic-gradient(from 40deg, transparent 0 80deg, #ffe84a 80deg 360deg);
-    animation: introPacman 1.2s steps(2, end) infinite;
+    z-index: 2;
+    animation:
+        introPacmanTravel 4.6s linear infinite,
+        introPacmanMouth 0.22s steps(2, end) infinite;
 }
 
 .intro-dot {
@@ -254,24 +263,43 @@ body {
     height: 6px;
     border-radius: 50%;
     background: #f8f8f2;
+    animation: introDotPulse 3.9s linear infinite;
 }
 
-.intro-dot:nth-of-type(2) {
-    left: 84px;
+.intro-dot-one {
+    left: 96px;
+    animation-delay: 0.22s;
 }
 
-.intro-dot:nth-of-type(3) {
-    left: 116px;
-}
-
-.intro-dot:nth-of-type(4) {
+.intro-dot-two {
     left: 148px;
+    animation-delay: 0.44s;
+}
+
+.intro-dot-three {
+    left: 200px;
+    animation-delay: 0.66s;
+}
+
+.intro-dot-four {
+    left: 252px;
+    animation-delay: 0.88s;
+}
+
+.intro-dot-five {
+    left: 304px;
+    animation-delay: 1.1s;
 }
 
 .intro-ghost {
+    left: 0;
     width: 24px;
     height: 24px;
     border-radius: 12px 12px 4px 4px;
+    z-index: 1;
+    animation:
+        introGhostTravel 4.6s linear infinite,
+        introGhostStep 0.38s steps(2, end) infinite;
 }
 
 .intro-ghost::before,
@@ -294,13 +322,18 @@ body {
 }
 
 .intro-ghost-red {
-    right: 72px;
     background: #f43f5e;
+    animation-delay: 0.28s, 0s;
+}
+
+.intro-ghost-pink {
+    background: #f472b6;
+    animation-delay: 0.52s, 0.1s;
 }
 
 .intro-ghost-cyan {
-    right: 34px;
     background: #22d3ee;
+    animation-delay: 0.76s, 0.2s;
 }
 
 .intro-kicker {
@@ -437,13 +470,99 @@ body {
     box-shadow: 0 0 0 1px #2436a8, 0 0 28px rgba(255,232,74,0.22);
 }
 
-@keyframes introPacman {
+@keyframes introDotTrack {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(32px);
+    }
+}
+
+@keyframes introPacmanTravel {
+    0% {
+        left: -34px;
+        opacity: 0;
+    }
+
+    8% {
+        opacity: 1;
+    }
+
+    72% {
+        left: calc(100% + 28px);
+        opacity: 1;
+    }
+
+    73% {
+        left: -34px;
+        opacity: 0;
+    }
+
+    100% {
+        left: -34px;
+        opacity: 0;
+    }
+}
+
+@keyframes introPacmanMouth {
     0% {
         background: conic-gradient(from 40deg, transparent 0 80deg, #ffe84a 80deg 360deg);
     }
 
     100% {
         background: conic-gradient(#ffe84a 0 360deg);
+    }
+}
+
+@keyframes introGhostTravel {
+    0% {
+        left: -82px;
+        opacity: 0;
+    }
+
+    16% {
+        opacity: 1;
+    }
+
+    86% {
+        left: calc(100% + 28px);
+        opacity: 1;
+    }
+
+    87% {
+        left: -82px;
+        opacity: 0;
+    }
+
+    100% {
+        left: -82px;
+        opacity: 0;
+    }
+}
+
+@keyframes introGhostStep {
+    0% {
+        top: calc(50% - 1px);
+    }
+
+    100% {
+        top: calc(50% + 1px);
+    }
+}
+
+@keyframes introDotPulse {
+    0%,
+    30% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+    }
+
+    42%,
+    100% {
+        opacity: 0.2;
+        transform: translateY(-50%) scale(0.65);
     }
 }
 
