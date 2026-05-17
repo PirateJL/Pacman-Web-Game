@@ -93,7 +93,7 @@ fi
 (
     cd "$deployDir"
 
-    rsync --archive --delete \
+    rsync --archive --checksum --delete-after \
           --exclude=.git \
           "$tmpDir"/ .
 
