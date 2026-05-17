@@ -347,6 +347,7 @@ function endGame(world, message, soundName) {
     cancelAnimationFrame(state.animationId)
     state.animationId = null
     world.emit(PlaySoundEvent, new PlaySoundEvent(soundName))
+    if (soundName === "endGame") state.onGameOver?.()
 }
 
 function advanceLevel(world) {
@@ -356,5 +357,6 @@ function advanceLevel(world) {
 
     state.setLevelIndex(nextLevelIndex)
     loadLevel(world, assets, nextLevelIndex)
+    state.captureLevelStartState()
     world.emit(PlaySoundEvent, new PlaySoundEvent("winGame"))
 }

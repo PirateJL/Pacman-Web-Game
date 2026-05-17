@@ -33,7 +33,10 @@ export class GameState {
         this.paused = true
         this.ready = false
         this.ended = false
+        this.gameOverVisible = false
         this.lastTimestamp = 0
+        this.levelStartState = null
+        this.onGameOver = null
         this.updateHud()
     }
 
@@ -54,6 +57,36 @@ export class GameState {
     setLevelIndex(levelIndex) {
         this.levelIndex = levelIndex
         this.level = levelIndex + 1
+        this.updateHud()
+    }
+
+    captureLevelStartState() {
+        this.levelStartState = {
+            levelIndex: this.levelIndex,
+            level: this.level,
+            score: this.score,
+            highScore: this.highScore,
+            lives: this.lives
+        }
+    }
+
+    restoreLevelStartState() {
+        if (!this.levelStartState) this.captureLevelStartState()
+
+        this.levelIndex = this.levelStartState.levelIndex
+        this.level = this.levelStartState.level
+        this.score = this.levelStartState.score
+        this.highScore = this.levelStartState.highScore
+        this.lives = this.levelStartState.lives
+        this.saveHighScore()
+        this.updateHud()
+    }
+
+    resetRun() {
+        this.score = 0
+        this.levelIndex = 0
+        this.level = 1
+        this.lives = 3
         this.updateHud()
     }
 
