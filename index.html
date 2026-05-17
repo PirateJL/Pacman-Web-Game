@@ -5,8 +5,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pacman</title>
-  <script type="module" crossorigin src="./assets/index-B5kdrY2f.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-yjIJ_cTd.css">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <script type="module" crossorigin src="./assets/index-DG1qIb-t.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-esFPpQ-M.css">
 </head>
 <body>
     <div id="darken"></div>
@@ -34,10 +35,75 @@
                 <span class="hud-label">Powerups</span>
                 <span id="powerUps" class="hud-value">0 active / 0 left</span>
             </div>
+            <div class="hud-actions" aria-label="Game controls">
+                <button id="pauseToggle" class="hud-button" type="button" aria-pressed="false">Pause</button>
+                <button id="muteToggle" class="hud-button" type="button" aria-pressed="false">Mute</button>
+            </div>
         </header>
 
         <section class="game-board" aria-label="Pacman grid">
             <canvas id="TheGame"></canvas>
+            <div id="pauseHud" class="pause-hud" hidden role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+                <div class="pause-panel">
+                    <p class="pause-kicker">Paused</p>
+                    <h1 id="pauseTitle" class="pause-title">Game Paused</h1>
+                    <button id="resumeGame" class="pause-button" type="button">Resume</button>
+                </div>
+            </div>
+            <div id="introHud" class="intro-hud" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+                <div id="introTitlePanel" class="intro-panel intro-title-panel">
+                    <div class="intro-marquee" aria-hidden="true">
+                        <span class="intro-pacman"></span>
+                        <span class="intro-dot intro-dot-one"></span>
+                        <span class="intro-dot intro-dot-two"></span>
+                        <span class="intro-dot intro-dot-three"></span>
+                        <span class="intro-dot intro-dot-four"></span>
+                        <span class="intro-dot intro-dot-five"></span>
+                        <span class="intro-ghost intro-ghost-red"></span>
+                        <span class="intro-ghost intro-ghost-pink"></span>
+                        <span class="intro-ghost intro-ghost-cyan"></span>
+                    </div>
+                    <p class="intro-kicker">Ready for the maze?</p>
+                    <h1 id="introTitle" class="intro-title">PACMAN</h1>
+                    <button id="introStart" class="intro-button intro-button-primary" type="button">Start Game</button>
+                </div>
+
+                <div id="introControlsPanel" class="intro-panel intro-controls-panel" hidden>
+                    <h2 class="intro-subtitle">Choose Controls</h2>
+                    <div id="keyboardOptions" class="keyboard-options" aria-label="Keyboard layouts"></div>
+                    <button id="introConfirm" class="intro-button intro-button-primary" type="button">Confirm</button>
+                </div>
+
+                <div id="introCountdownPanel" class="intro-panel intro-countdown-panel" hidden>
+                    <p class="intro-kicker">Get ready</p>
+                    <div id="introCountdown" class="intro-countdown">3</div>
+                </div>
+            </div>
+            <div id="gameOverHud" class="game-over-hud" hidden role="dialog" aria-modal="true" aria-labelledby="gameOverTitle">
+                <div class="game-over-panel">
+                    <h1 id="gameOverTitle" class="game-over-title">You Lost</h1>
+                    <div class="game-over-actions" aria-label="Game over actions">
+                        <button id="retryLevel" class="game-over-button" type="button">Retry Level</button>
+                        <button id="startOver" class="game-over-button game-over-button-secondary" type="button">Start Over</button>
+                    </div>
+                </div>
+            </div>
+            <div id="levelCompleteHud" class="win-hud win-hud-mini" hidden role="dialog" aria-modal="true" aria-labelledby="levelCompleteTitle">
+                <div class="win-panel win-panel-mini">
+                    <p class="win-kicker">Nice run</p>
+                    <h1 id="levelCompleteTitle" class="win-title win-title-mini">Level Clear</h1>
+                    <p id="levelCompleteScore" class="win-score">Score 0</p>
+                    <button id="nextLevel" class="win-button" type="button">Next Level</button>
+                </div>
+            </div>
+            <div id="finalWinHud" class="win-hud win-hud-final" hidden role="dialog" aria-modal="true" aria-labelledby="finalWinTitle">
+                <div class="win-panel win-panel-final">
+                    <p class="win-kicker">All mazes cleared</p>
+                    <h1 id="finalWinTitle" class="win-title win-title-final">You Win</h1>
+                    <p id="finalWinScore" class="win-score">Final Score 0</p>
+                    <button id="finalWinStartOver" class="win-button" type="button">Play Again</button>
+                </div>
+            </div>
         </section>
         
         <aside id="devTools" class="devtools" aria-label="Developer tools"></aside>
