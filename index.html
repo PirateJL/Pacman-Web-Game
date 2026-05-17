@@ -33,10 +33,21 @@
                 <span class="hud-label">Powerups</span>
                 <span id="powerUps" class="hud-value">0 active / 0 left</span>
             </div>
+            <div class="hud-actions" aria-label="Game controls">
+                <button id="pauseToggle" class="hud-button" type="button" aria-pressed="false">Pause</button>
+                <button id="muteToggle" class="hud-button" type="button" aria-pressed="false">Mute</button>
+            </div>
         </header>
 
         <section class="game-board" aria-label="Pacman grid">
             <canvas id="TheGame"></canvas>
+            <div id="pauseHud" class="pause-hud" hidden role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+                <div class="pause-panel">
+                    <p class="pause-kicker">Paused</p>
+                    <h1 id="pauseTitle" class="pause-title">Game Paused</h1>
+                    <button id="resumeGame" class="pause-button" type="button">Resume</button>
+                </div>
+            </div>
             <div id="introHud" class="intro-hud" role="dialog" aria-modal="true" aria-labelledby="introTitle">
                 <div id="introTitlePanel" class="intro-panel intro-title-panel">
                     <div class="intro-marquee" aria-hidden="true">

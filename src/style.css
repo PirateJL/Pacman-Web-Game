@@ -18,7 +18,7 @@ body {
 
 .hud {
     display: grid;
-    grid-template-columns: repeat(5, minmax(110px, 1fr));
+    grid-template-columns: repeat(5, minmax(100px, 1fr)) minmax(136px, auto);
     gap: 8px;
     margin-bottom: 12px;
 }
@@ -55,6 +55,42 @@ body {
     font-size: 17px;
 }
 
+.hud-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(62px, 1fr));
+    gap: 8px;
+}
+
+.hud-button {
+    min-height: 54px;
+    padding: 8px;
+    border: 1px solid #ffe84a;
+    background: #111936;
+    color: #f8f8f2;
+    font-family: "Courier New", monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+    cursor: pointer;
+}
+
+.hud-button[aria-pressed="true"] {
+    background: #ffe84a;
+    color: #050505;
+}
+
+.hud-button:disabled {
+    border-color: #354164;
+    color: #687499;
+    cursor: not-allowed;
+}
+
+.hud-button:hover:not(:disabled),
+.hud-button:focus-visible {
+    outline: 2px solid #f8f8f2;
+    outline-offset: 2px;
+}
+
 .game-board {
     position: relative;
     display: inline-block;
@@ -72,6 +108,71 @@ body {
 
 #TheGame {
     display: block;
+}
+
+.pause-hud {
+    position: absolute;
+    inset: 0;
+    z-index: 18;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(0, 0, 0, 0.68);
+}
+
+.pause-hud[hidden] {
+    display: none;
+}
+
+.pause-panel {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    width: min(300px, 100%);
+    padding: 20px 18px;
+    border: 2px solid #ffe84a;
+    background: #060914;
+    box-shadow: 0 0 0 1px #2436a8, 0 14px 36px rgba(0,0,0,0.7);
+    text-align: center;
+}
+
+.pause-kicker {
+    margin: 0;
+    color: #9fb7ff;
+    font-family: "Courier New", monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.pause-title {
+    margin: 0;
+    color: #ffe84a;
+    font-family: "Courier New", monospace;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.pause-button {
+    min-width: 132px;
+    min-height: 42px;
+    border: 1px solid #ffe84a;
+    background: #ffe84a;
+    color: #050505;
+    font-family: "Courier New", monospace;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0;
+    cursor: pointer;
+}
+
+.pause-button:hover,
+.pause-button:focus-visible {
+    outline: 2px solid #f8f8f2;
+    outline-offset: 2px;
 }
 
 .intro-hud {
@@ -560,7 +661,8 @@ body {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .hud-item-wide {
+    .hud-item-wide,
+    .hud-actions {
         grid-column: span 2;
     }
 

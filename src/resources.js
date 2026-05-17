@@ -146,6 +146,8 @@ export class AssetCache {
 export class AudioResource {
     constructor(basePath = "./sounds/") {
         this.basePath = basePath
+        this.muted = false
+        this.activeAudio = new Set()
         this.files = {
             intro: "Intro.wav",
             waka: "waka.mp3",
@@ -158,14 +160,35 @@ export class AudioResource {
         }
     }
 
+    setMuted(muted) {
+        this.muted = muted
+        for (const audio of this.activeAudio) {
+            audio.muted = muted
+        }
+    }
+
+    toggleMuted() {
+        this.setMuted(!this.muted)
+        return this.muted
+    }
+
     play(name, params = null) {
         const file = this.files[name]
         if (!file) return null
 
         const audio = new Audio(this.basePath + file)
-        if (params && params.onEnded) audio.onended = params.onEnded
+        audio.muted = this.muted
+        this.activeAudio.add(audio)
+        audio.onended = () => {
+            this.activeAudio.delete(audio)
+            params?.onEnded?.()
+        }
         const playResult = audio.play()
-        if (playResult && playResult.catch) playResult.catch(() => {})
+        if (playResult && playResult.catch) {
+            playResult.catch(() => {
+                this.activeAudio.delete(audio)
+            })
+        }
 
         return audio
     }

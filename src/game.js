@@ -186,6 +186,8 @@ class GameController {
         this.audio = null
         this.assets = null
         this.devTools = null
+        this.controlsHud = null
+        this.pauseHud = null
         this.gameOverHud = null
         this.levelCompleteHud = null
         this.finalWinHud = null
@@ -193,6 +195,7 @@ class GameController {
         this.introStep = "title"
         this.selectedKeyboardType = null
         this.countdownTimer = null
+        this.muted = false
         this.availableKeyboards = ["AZERTY", "QWERTY"]
         this.currentKeyboardType = null
         this.Storage = Storage
@@ -244,6 +247,7 @@ class GameController {
         this.audio = audio
 
         this.initKeyControl()
+        this.initGameControls()
         this.initIntroHud()
         this.initMovementKeys()
         this.initGameOverHud()
@@ -322,6 +326,8 @@ class GameController {
         this.state.updateHud()
         this.hideGameOverHud()
         this.hideWinHuds()
+        this.hidePauseHud()
+        this.updateControlButtons()
 
         if (!this.state.paused && this.state.animationId === null) {
             this.animate()
@@ -336,6 +342,112 @@ class GameController {
         this.state.animationId = requestAnimationFrame(this.animate)
         this.schedule.run(this.world, dt, SYSTEM_PHASES)
         this.devTools?.update()
+    }
+
+    initGameControls() {
+        this.controlsHud = {
+            pause: document.getElementById("pauseToggle"),
+            mute: document.getElementById("muteToggle")
+        }
+        this.pauseHud = {
+            root: document.getElementById("pauseHud"),
+            resume: document.getElementById("resumeGame")
+        }
+
+        this.muted = this.Storage.localStorageGet("PacmanWebGameMuted") === "true"
+        this.audio?.setMuted(this.muted)
+        this.controlsHud.pause?.addEventListener("click", () => this.togglePause())
+        this.controlsHud.mute?.addEventListener("click", () => this.toggleMute())
+        this.pauseHud.resume?.addEventListener("click", () => this.resumeGame())
+
+        window.addEventListener("keydown", event => {
+            if (event.repeat) return
+
+            const key = event.key.toLowerCase()
+            if (key === "p") {
+                event.preventDefault()
+                this.togglePause()
+            } else if (key === "m") {
+                event.preventDefault()
+                this.toggleMute()
+            }
+        })
+
+        this.updateControlButtons()
+    }
+
+    canTogglePause() {
+        return Boolean(
+            this.state &&
+            this.input?.currentKeyboardType &&
+            this.introHud?.root?.hidden &&
+            !this.state.ended &&
+            !this.state.gameOverVisible &&
+            !this.state.levelCompleteVisible &&
+            !this.state.finalWinVisible
+        )
+    }
+
+    togglePause() {
+        if (!this.canTogglePause()) {
+            this.updateControlButtons()
+            return
+        }
+
+        if (this.state.paused) this.resumeGame()
+        else this.pauseGame()
+    }
+
+    pauseGame() {
+        if (!this.canTogglePause() || this.state.paused) return
+
+        this.clearInput()
+        this.PAUSE = true
+        this.state.paused = true
+        cancelAnimationFrame(this.state.animationId)
+        this.state.animationId = null
+        this.showPauseHud()
+        this.updateControlButtons()
+    }
+
+    resumeGame() {
+        if (!this.canTogglePause() || !this.state.paused) return
+
+        this.clearInput()
+        this.hidePauseHud()
+        this.PAUSE = false
+        this.state.paused = false
+        this.state.lastTimestamp = 0
+        if (this.state.animationId === null) this.animate()
+        this.updateControlButtons()
+    }
+
+    showPauseHud() {
+        if (this.pauseHud?.root) this.pauseHud.root.hidden = false
+        this.pauseHud?.resume?.focus()
+    }
+
+    hidePauseHud() {
+        if (this.pauseHud?.root) this.pauseHud.root.hidden = true
+    }
+
+    toggleMute() {
+        this.muted = this.audio?.toggleMuted() ?? !this.muted
+        this.Storage.localStorageSet("PacmanWebGameMuted", String(this.muted))
+        this.updateControlButtons()
+    }
+
+    updateControlButtons() {
+        if (this.controlsHud?.pause) {
+            const isPaused = Boolean(this.state?.paused && this.pauseHud?.root && !this.pauseHud.root.hidden)
+            this.controlsHud.pause.textContent = isPaused ? "Resume" : "Pause"
+            this.controlsHud.pause.disabled = !this.canTogglePause()
+            this.controlsHud.pause.setAttribute("aria-pressed", String(isPaused))
+        }
+        if (this.controlsHud?.mute) {
+            this.controlsHud.mute.textContent = this.muted ? "Sound" : "Mute"
+            this.controlsHud.mute.setAttribute("aria-pressed", String(this.muted))
+        }
     }
 
     initKeyControl() {
@@ -494,6 +606,8 @@ class GameController {
         this.PAUSE = false
         this.state.paused = false
         this.state.lastTimestamp = 0
+        this.hidePauseHud()
+        this.updateControlButtons()
         if (this.state.animationId === null) this.animate()
     }
 
@@ -523,14 +637,17 @@ class GameController {
     showGameOverHud() {
         if (!this.state || !this.gameOverHud?.root) return
 
+        this.hidePauseHud()
         this.state.gameOverVisible = true
         this.gameOverHud.root.hidden = false
         this.gameOverHud.retry?.focus()
+        this.updateControlButtons()
     }
 
     hideGameOverHud() {
         if (this.gameOverHud?.root) this.gameOverHud.root.hidden = true
         if (this.state) this.state.gameOverVisible = false
+        this.updateControlButtons()
     }
 
     initWinHuds() {
@@ -564,6 +681,7 @@ class GameController {
         if (!this.state || !this.levelCompleteHud?.root) return
 
         this.clearInput()
+        this.hidePauseHud()
         this.state.levelCompleteVisible = true
         if (this.levelCompleteHud.title) {
             this.levelCompleteHud.title.textContent = `Level ${this.state.level} Clear`
@@ -573,18 +691,21 @@ class GameController {
         }
         this.levelCompleteHud.root.hidden = false
         this.levelCompleteHud.next?.focus()
+        this.updateControlButtons()
     }
 
     showFinalWinHud() {
         if (!this.state || !this.finalWinHud?.root) return
 
         this.clearInput()
+        this.hidePauseHud()
         this.state.finalWinVisible = true
         if (this.finalWinHud.score) {
             this.finalWinHud.score.textContent = `Final Score ${this.state.score}`
         }
         this.finalWinHud.root.hidden = false
         this.finalWinHud.startOver?.focus()
+        this.updateControlButtons()
     }
 
     hideWinHuds() {
@@ -594,6 +715,7 @@ class GameController {
             this.state.levelCompleteVisible = false
             this.state.finalWinVisible = false
         }
+        this.updateControlButtons()
     }
 
     continueToNextLevel() {
@@ -609,6 +731,7 @@ class GameController {
         loadLevel(this.world, this.assets, this.state.levelIndex)
         this.state.captureLevelStartState()
         this.state.updateHud()
+        this.updateControlButtons()
 
         if (!this.state.paused) this.animate()
     }
@@ -636,8 +759,10 @@ class GameController {
         this.state.animationId = null
         this.hideGameOverHud()
         this.hideWinHuds()
+        this.hidePauseHud()
         loadLevel(this.world, this.assets, this.state.levelIndex)
         this.state.updateHud()
+        this.updateControlButtons()
 
         if (!this.state.paused) this.animate()
     }
@@ -652,7 +777,13 @@ class GameController {
 
     initMovementKeys() {
         addEventListener("keydown", ({ key }) => {
-            if (!this.input.currentKeyboardType || this.state?.gameOverVisible) return
+            if (
+                !this.input.currentKeyboardType ||
+                this.state?.paused ||
+                this.state?.gameOverVisible ||
+                this.state?.levelCompleteVisible ||
+                this.state?.finalWinVisible
+            ) return
 
             if (this.KeyControll.getKeyUP(this.input.currentKeyboardType).includes(key)) {
                 this.input.keys.up.pressed = true
