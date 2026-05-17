@@ -247,6 +247,7 @@ body {
 }
 
 .intro-pacman {
+    display: block;
     left: 0;
     width: 24px;
     height: 24px;
@@ -292,6 +293,7 @@ body {
 }
 
 .intro-ghost {
+    display: block;
     left: 0;
     width: 24px;
     height: 24px;
@@ -484,25 +486,36 @@ body {
     0% {
         left: -34px;
         opacity: 0;
+        display: none;
     }
 
     8% {
         opacity: 1;
+        display: block;
     }
 
     72% {
         left: calc(100% + 28px);
         opacity: 1;
+        display: block;
+    }
+
+    72.01% {
+        left: calc(100% + 28px);
+        opacity: 0;
+        display: none;
     }
 
     73% {
         left: -34px;
         opacity: 0;
+        display: none;
     }
 
     100% {
         left: -34px;
         opacity: 0;
+        display: none;
     }
 }
 
@@ -520,25 +533,36 @@ body {
     0% {
         left: -82px;
         opacity: 0;
+        display: none;
     }
 
     16% {
         opacity: 1;
+        display: block;
     }
 
     86% {
         left: calc(100% + 28px);
         opacity: 1;
+        display: block;
+    }
+
+    86.01% {
+        left: calc(100% + 28px);
+        opacity: 0;
+        display: none;
     }
 
     87% {
         left: -82px;
         opacity: 0;
+        display: none;
     }
 
     100% {
         left: -82px;
         opacity: 0;
+        display: none;
     }
 }
 
